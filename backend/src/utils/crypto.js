@@ -9,7 +9,14 @@ const AUTH_TAG_LENGTH = 16;
 const getMasterKey = () => {
   const key = process.env.ENCRYPTION_KEY;
   if (key) {
+    if (key.length !== 64 || !/^[0-9a-fA-F]+$/.test(key)) {
+      throw new Error('ENCRYPTION_KEY must be 64 hex characters (32 bytes)');
+    }
     return Buffer.from(key, 'hex');
+  }
+  // 生产环境必须设置密钥
+  if (process.env.NODE_ENV === 'production') {
+    throw new Error('ENCRYPTION_KEY environment variable is required in production');
   }
   // 开发环境：生成随机密钥并警告
   console.warn('WARNING: ENCRYPTION_KEY not set, using random key (data will be lost on restart)');
@@ -62,7 +69,11 @@ function decrypt(encryptedText) {
 
     return decrypted;
   } catch (err) {
-    console.error('Decryption failed:', err.message);
+    console.error('Decryption failed:', {
+      error: err.message,
+      inputLength: encryptedText?.length,
+      hasCorrectFormat: encryptedText?.split(':').length === 3
+    });
     return '';
   }
 }
