@@ -2,6 +2,7 @@ const express = require('express');
 const axios = require('axios');
 const { query } = require('../models');
 const config = require('../config');
+const { encrypt, decrypt } = require('../utils/crypto');
 
 const router = express.Router();
 
@@ -46,6 +47,16 @@ let memorySettings = {
   ],
   // 当前选中的模型
   activeModelId: 'model-default',
+  // 钉钉配置
+  dingtalk: {
+    enabled: false,
+    clientId: '',
+    clientSecret: '', // 加密存储
+    defaultAgentId: '',
+    connected: false,
+    messageCount: 0,
+    lastMessageAt: null,
+  },
 };
 
 // GET /api/settings - 获取所有设置
@@ -642,6 +653,8 @@ async function loadSettingsFromDB() {
           memorySettings.models = value;
         } else if (row.key === 'activeModelId') {
           memorySettings.activeModelId = value;
+        } else if (row.key === 'dingtalk') {
+          memorySettings.dingtalk = { ...memorySettings.dingtalk, ...value };
         }
       } catch (e) {}
     }
@@ -651,6 +664,45 @@ async function loadSettingsFromDB() {
   }
 }
 
+// 获取钉钉配置（解密敏感字段）
+function getDingtalkConfig() {
+  return {
+    ...memorySettings.dingtalk,
+    clientSecret: memorySettings.dingtalk.clientSecret
+      ? decrypt(memorySettings.dingtalk.clientSecret)
+      : '',
+  };
+}
+
+// 设置钉钉配置（加密敏感字段）
+async function setDingtalkConfig(config) {
+  memorySettings.dingtalk = {
+    ...memorySettings.dingtalk,
+    ...config,
+    clientSecret: config.clientSecret ? encrypt(config.clientSecret) : memorySettings.dingtalk.clientSecret,
+  };
+
+  // 保存到数据库
+  try {
+    await query(
+      'INSERT INTO settings (`key`, value) VALUES (?, ?) ON DUPLICATE KEY UPDATE value = ?',
+      ['dingtalk', JSON.stringify(memorySettings.dingtalk), JSON.stringify(memorySettings.dingtalk)]
+    );
+  } catch (dbErr) {
+    console.log('Database not available, using memory mode');
+  }
+
+  return memorySettings.dingtalk;
+}
+
+// 更新钉钉运行时状态
+function updateDingtalkStatus(status) {
+  memorySettings.dingtalk = {
+    ...memorySettings.dingtalk,
+    ...status,
+  };
+}
+
 module.exports = router;
 module.exports.getClusterConfig = getClusterConfig;
 module.exports.getAIConfig = getAIConfig;
@@ -658,3 +710,6 @@ module.exports.getModels = getModels;
 module.exports.getSparkHistoryUrl = getSparkHistoryUrl;
 module.exports.loadSettingsFromDB = loadSettingsFromDB;
 module.exports.getActiveModelId = getActiveModelId;
+module.exports.getDingtalkConfig = getDingtalkConfig;
+module.exports.setDingtalkConfig = setDingtalkConfig;
+module.exports.updateDingtalkStatus = updateDingtalkStatus;
