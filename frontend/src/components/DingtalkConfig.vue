@@ -184,9 +184,11 @@ const currentAgentName = ref('')
 const saving = ref(false)
 const testing = ref(false)
 const refreshing = ref(false)
+const loading = ref(false)
 const testResult = ref(null)
 
 const loadConfig = async () => {
+  loading.value = true
   try {
     const res = await axios.get('/api/dingtalk/config')
     if (res.data) {
@@ -194,9 +196,16 @@ const loadConfig = async () => {
       config.value.clientSecret = res.data.clientSecret || ''
       config.value.defaultAgentId = res.data.defaultAgentId || ''
       config.value.enabled = res.data.enabled || false
+      // 从 availableAgents 中找到当前智能体名称
+      if (res.data.defaultAgentId && res.data.availableAgents) {
+        const agent = res.data.availableAgents.find(a => a.id === res.data.defaultAgentId)
+        currentAgentName.value = agent?.name || ''
+      }
     }
   } catch (err) {
-    console.log('加载配置失败:', err)
+    ElMessage.error('加载配置失败，请刷新页面重试')
+  } finally {
+    loading.value = false
   }
 }
 
@@ -205,7 +214,7 @@ const loadAgents = async () => {
     const res = await axios.get('/api/agents')
     agents.value = res.data || []
   } catch (err) {
-    console.log('加载智能体失败:', err)
+    ElMessage.error('加载智能体列表失败')
   }
 }
 
@@ -214,12 +223,19 @@ const refreshStatus = async () => {
   try {
     const res = await axios.get('/api/dingtalk/status')
     if (res.data) {
-      connectionStatus.value = res.data.connectionStatus || 'unknown'
-      messageStats.value = res.data.messageStats || { received: 0, sent: 0 }
-      currentAgentName.value = res.data.currentAgentName || ''
+      connectionStatus.value = res.data.connected ? 'connected' : 'disconnected'
+      messageStats.value = {
+        received: res.data.messageCount || 0,
+        sent: res.data.messageCount || 0,
+      }
+      // 如果状态返回了默认智能体名称
+      if (res.data.defaultAgentId && agents.value.length > 0) {
+        const agent = agents.value.find(a => a.id === res.data.defaultAgentId)
+        currentAgentName.value = agent?.name || ''
+      }
     }
   } catch (err) {
-    console.log('刷新状态失败:', err)
+    ElMessage.error('刷新状态失败')
   } finally {
     refreshing.value = false
   }
