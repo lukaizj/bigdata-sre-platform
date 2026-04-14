@@ -5,7 +5,6 @@ const { v4: uuidv4 } = require('uuid');
 const { query } = require('../models');
 const path = require('path');
 const fs = require('fs');
-const { execSync, spawn } = require('child_process');
 
 // 技能执行器映射 - 动态加载
 const skillExecutors = {};
@@ -22,7 +21,7 @@ for (const name of internalSkillNames) {
   }
 }
 
-// 外部技能目录 - /root/.agents/skills
+// 外部技能目录 - /root/.agents/skills (只加载有 execute 函数的技能)
 const externalSkillsDir = '/root/.agents/skills';
 if (fs.existsSync(externalSkillsDir)) {
   const externalSkills = fs.readdirSync(externalSkillsDir).filter(f => {
@@ -33,20 +32,13 @@ if (fs.existsSync(externalSkillsDir)) {
   for (const name of externalSkills) {
     try {
       const skillModule = require(path.join(externalSkillsDir, name, 'index.js'));
-      if (skillModule.exec) {
-        // CLI 工具类型技能 - 创建执行器包装
-        skillExecutors[name] = {
-          execute: async (message, config, previousResult) => {
-            return await executeCliSkill(name, skillModule.exec, message, config);
-          }
-        };
-      } else if (skillModule.execute) {
-        // 已有 execute 函数
+      // 只加载有 execute 函数的技能，跳过 CLI 工具（exec 属性）
+      if (skillModule.execute && typeof skillModule.execute === 'function') {
         skillExecutors[name] = skillModule;
-      } else {
-        console.warn(`Skill ${name} has no exec or execute method`);
+        console.log(`Loaded external skill: ${name}`);
+      } else if (skillModule.exec) {
+        console.log(`Skipping CLI tool: ${name} (use HTTP API instead)`);
       }
-      console.log(`Loaded external skill: ${name}`);
     } catch (e) {
       console.warn(`Failed to load external skill: ${name}`, e.message);
     }
@@ -55,71 +47,6 @@ if (fs.existsSync(externalSkillsDir)) {
 
 // 获取集群配置
 const { getClusterConfig, getSparkHistoryUrl } = require('../routes/settings');
-
-// CLI 技能执行器
-async function executeCliSkill(skillId, execPath, message, config) {
-  try {
-    // 使用全局 Spark History URL 配置
-    const sparkUrl = getSparkHistoryUrl() || config?.endpoint || 'http://localhost:18080';
-
-    // 根据消息内容确定命令
-    let cmdArgs = ['--json', '--server', sparkUrl];
-
-    if (message.includes('应用') || message.includes('app') || message.includes('列出')) {
-      cmdArgs.push('apps');
-    } else if (message.includes('job') || message.includes('任务')) {
-      cmdArgs.push('jobs');
-    } else if (message.includes('stage')) {
-      cmdArgs.push('stages');
-    } else if (message.includes('executor') || message.includes('执行器')) {
-      cmdArgs.push('executors', '--all');
-    } else if (message.includes('sql')) {
-      cmdArgs.push('sql');
-    } else {
-      // 默认列出应用
-      cmdArgs.push('apps');
-    }
-
-    console.log(`Executing CLI skill: ${execPath} ${cmdArgs.join(' ')}`);
-
-    // 执行命令
-    const result = execSync(`${execPath} ${cmdArgs.join(' ')}`, {
-      encoding: 'utf-8',
-      timeout: 30000,
-      maxBuffer: 10 * 1024 * 1024
-    });
-
-    const data = JSON.parse(result);
-
-    return {
-      data: data,
-      summary: formatSparkData(data, message)
-    };
-  } catch (e) {
-    console.error(`CLI skill execution failed:`, e.message);
-    return { error: `执行失败: ${e.message}`, data: null };
-  }
-}
-
-// 格式化 Spark 数据
-function formatSparkData(data, message) {
-  if (!data) return '无数据';
-
-  if (Array.isArray(data)) {
-    // 应用列表
-    if (data[0] && data[0].id) {
-      const apps = data.slice(0, 10); // 显示前10个
-      let summary = `找到 ${data.length} 个 Spark 应用:\n`;
-      for (const app of apps) {
-        summary += `- ${app.name || app.id}: ${app.status || 'unknown'} (尝试次数: ${app.attempts?.length || 1})\n`;
-      }
-      return summary;
-    }
-    return `找到 ${data.length} 条记录`;
-  }
-
-  return JSON.stringify(data, null, 2).slice(0, 500);
-}
 
 /**
  * 处理对话消息
