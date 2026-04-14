@@ -198,11 +198,17 @@ async function handleChat(agentId, message) {
     }
   }
 
-  // 保存对话记录
+  // 保存对话记录 (限制数据大小避免数据库包过大)
   const conversationId = uuidv4();
+  let dataToSave = lastResult;
+  const dataStr = JSON.stringify(dataToSave);
+  if (dataStr.length > 10000) {
+    // 数据太大时截断或设为 null
+    dataToSave = null;
+  }
   await query(
     'INSERT INTO conversations (id, agent_id, message, response, data) VALUES (?, ?, ?, ?, ?)',
-    [conversationId, agentId, message, response, JSON.stringify(lastResult)]
+    [conversationId, agentId, message, response, JSON.stringify(dataToSave)]
   );
 
   return { response, data: lastResult, steps: executionSteps };
