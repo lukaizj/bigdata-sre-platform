@@ -102,11 +102,12 @@ class DingTalkStreamClient {
 
       logger.info('Requesting new accessToken from DingTalk...');
 
+      // 钉钉 OAuth2 API 使用 appKey/appSecret 参数名
       const response = await axios.post(
         'https://api.dingtalk.com/v1.0/oauth2/accessToken',
         {
-          clientId: clientId,
-          clientSecret: clientSecret
+          appKey: clientId,
+          appSecret: clientSecret
         },
         {
           headers: {
