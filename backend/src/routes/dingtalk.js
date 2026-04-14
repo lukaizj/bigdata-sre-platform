@@ -130,11 +130,12 @@ router.post('/test-connection', async (req, res) => {
 
     // 实际调用钉钉 API 验证配置
     try {
+      // 钉钉 OAuth2 API 使用 appKey/appSecret 参数名
       const tokenResponse = await axios.post(
         'https://api.dingtalk.com/v1.0/oauth2/accessToken',
         {
-          clientId: clientId,
-          clientSecret: clientSecret
+          appKey: clientId,
+          appSecret: clientSecret
         },
         {
           headers: { 'Content-Type': 'application/json' },
