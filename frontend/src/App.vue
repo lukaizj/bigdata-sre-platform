@@ -54,7 +54,7 @@
             <div class="header-theme-toggle">
               <button
                 :class="['theme-btn', { active: theme === 'light' }]"
-                @click="setTheme('light')"
+                @click="handleSetTheme('light')"
                 title="白天模式"
               >
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -67,7 +67,7 @@
               </button>
               <button
                 :class="['theme-btn', { active: theme === 'dark' }]"
-                @click="setTheme('dark')"
+                @click="handleSetTheme('dark')"
                 title="夜晚模式"
               >
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -78,7 +78,7 @@
 
             <!-- 用户信息 -->
             <div class="header-user" @click="showUserMenu = !showUserMenu">
-              <div class="user-avatar">{{ user?.username?.charAt(0)?.toUpperCase() || 'U' }}</div>
+              <div class="user-avatar">{{ getAvatarChar(user) }}</div>
               <span class="user-name">{{ user?.username || '用户' }}</span>
               <div v-if="showUserMenu" class="user-dropdown">
                 <div class="dropdown-item" @click="handleLogout">
@@ -95,13 +95,17 @@
         </el-header>
 
         <el-main class="main-content">
-          <ChatView v-if="activeMenu === 'chat'" />
-          <AgentManagement v-else-if="activeMenu === 'agents'" />
-          <SkillManagement v-else-if="activeMenu === 'skills'" />
-          <ClusterConfig v-else-if="activeMenu === 'config'" />
-          <ClusterDashboard v-else-if="activeMenu === 'dashboard'" />
-          <UserManagement v-else-if="activeMenu === 'users'" />
-          <UserGuide v-else-if="activeMenu === 'guide'" @navigate="activeMenu = $event" />
+          <!-- 使用 KeepAlive 缓存组件，避免切换时重复加载 -->
+          <KeepAlive>
+            <ChatView v-if="activeMenu === 'chat'" />
+            <AgentManagement v-else-if="activeMenu === 'agents'" />
+            <SkillManagement v-else-if="activeMenu === 'skills'" />
+            <DingtalkConfig v-else-if="activeMenu === 'dingtalk'" />
+            <ClusterConfig v-else-if="activeMenu === 'config'" />
+            <ClusterDashboard v-else-if="activeMenu === 'dashboard'" />
+            <UserManagement v-else-if="activeMenu === 'users'" />
+            <UserGuide v-else-if="activeMenu === 'guide'" @navigate="activeMenu = $event" />
+          </KeepAlive>
         </el-main>
       </el-container>
     </el-container>
@@ -109,21 +113,29 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, watch, defineAsyncComponent } from 'vue'
 import axios from 'axios'
-import ChatView from './components/ChatView.vue'
-import AgentManagement from './components/AgentManagement.vue'
-import SkillManagement from './components/SkillManagement.vue'
-import ClusterConfig from './components/ClusterConfig.vue'
-import ClusterDashboard from './components/ClusterDashboard.vue'
-import UserGuide from './components/UserGuide.vue'
+import { setTheme, initTheme } from './utils/theme'
+import { getAvatarChar } from './utils/avatar'
+import { STORAGE_KEYS, ROLE, DEFAULT_USER_PERMISSIONS } from './utils/constants'
+
+// 登录页直接加载（首屏需要）
 import LoginPage from './components/LoginPage.vue'
-import UserManagement from './components/UserManagement.vue'
+
+// 其他组件懒加载，减少首屏加载时间
+const ChatView = defineAsyncComponent(() => import('./components/ChatView.vue'))
+const AgentManagement = defineAsyncComponent(() => import('./components/AgentManagement.vue'))
+const SkillManagement = defineAsyncComponent(() => import('./components/SkillManagement.vue'))
+const ClusterConfig = defineAsyncComponent(() => import('./components/ClusterConfig.vue'))
+const ClusterDashboard = defineAsyncComponent(() => import('./components/ClusterDashboard.vue'))
+const UserGuide = defineAsyncComponent(() => import('./components/UserGuide.vue'))
+const UserManagement = defineAsyncComponent(() => import('./components/UserManagement.vue'))
+const DingtalkConfig = defineAsyncComponent(() => import('./components/DingtalkConfig.vue'))
 
 const isLoggedIn = ref(false)
 const user = ref(null)
 const showUserMenu = ref(false)
-const activeMenu = ref(localStorage.getItem('activeMenu') || 'chat')
+const activeMenu = ref(localStorage.getItem(STORAGE_KEYS.ACTIVE_MENU) || 'chat')
 const theme = ref('light')
 
 const menuItems = [
@@ -132,12 +144,10 @@ const menuItems = [
   { key: 'dashboard', label: '集群仪表板', icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"></rect><path d="M3 9h18M9 21V9"></path></svg>' },
   { key: 'agents', label: '智能体管理', icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle></svg>' },
   { key: 'skills', label: '技能配置', icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline></svg>' },
+  { key: 'dingtalk', label: '钉钉配置', icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg>' },
   { key: 'config', label: '集群配置', icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"></path></svg>' },
   { key: 'users', label: '用户管理', icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>' },
 ]
-
-// 普通用户默认可见的模块
-const defaultUserPermissions = ['guide', 'chat', 'dashboard', 'users']
 
 const currentPageTitle = computed(() => {
   const item = menuItems.find(i => i.key === activeMenu.value)
@@ -146,29 +156,28 @@ const currentPageTitle = computed(() => {
 
 const visibleMenuItems = computed(() => {
   // 管理员显示所有菜单
-  if (user.value?.role === 'admin') {
+  if (user.value?.role === ROLE.ADMIN) {
     return menuItems
   }
 
   // 获取用户权限，如果没有配置则使用默认权限
   let permissions = user.value?.permissions
   if (!permissions || !Array.isArray(permissions) || permissions.length === 0) {
-    permissions = defaultUserPermissions
+    permissions = DEFAULT_USER_PERMISSIONS
   }
 
   // 根据权限过滤菜单
   return menuItems.filter(item => permissions.includes(item.key))
 })
 
-const setTheme = (newTheme) => {
+const handleSetTheme = (newTheme) => {
   theme.value = newTheme
-  localStorage.setItem('theme', newTheme)
-  document.documentElement.setAttribute('data-theme', newTheme)
+  setTheme(newTheme)
 }
 
 // 保存当前页面到 localStorage
 watch(activeMenu, (newVal) => {
-  localStorage.setItem('activeMenu', newVal)
+  localStorage.setItem(STORAGE_KEYS.ACTIVE_MENU, newVal)
 })
 
 const handleLoginSuccess = (userData) => {
@@ -177,8 +186,8 @@ const handleLoginSuccess = (userData) => {
 }
 
 const handleLogout = () => {
-  localStorage.removeItem('token')
-  localStorage.removeItem('user')
+  localStorage.removeItem(STORAGE_KEYS.TOKEN)
+  localStorage.removeItem(STORAGE_KEYS.USER)
   delete axios.defaults.headers.common['Authorization']
   isLoggedIn.value = false
   user.value = null
@@ -186,8 +195,8 @@ const handleLogout = () => {
 }
 
 const checkAuth = async () => {
-  const token = localStorage.getItem('token')
-  const savedUser = localStorage.getItem('user')
+  const token = localStorage.getItem(STORAGE_KEYS.TOKEN)
+  const savedUser = localStorage.getItem(STORAGE_KEYS.USER)
 
   if (token && savedUser) {
     try {
@@ -196,7 +205,7 @@ const checkAuth = async () => {
       const res = await axios.get('/api/auth/me')
       user.value = res.data.user
       // 更新 localStorage 中的用户信息
-      localStorage.setItem('user', JSON.stringify(res.data.user))
+      localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(res.data.user))
       isLoggedIn.value = true
     } catch (err) {
       // Token 无效，清除登录状态
@@ -206,11 +215,8 @@ const checkAuth = async () => {
 }
 
 onMounted(() => {
-  // 从 localStorage 读取主题设置
-  const savedTheme = localStorage.getItem('theme') || 'light'
-  theme.value = savedTheme
-  document.documentElement.setAttribute('data-theme', savedTheme)
-
+  // 初始化主题
+  theme.value = initTheme()
   // 检查登录状态
   checkAuth()
 })
