@@ -552,8 +552,40 @@ function parseOutput(output) {
 
 const router = express.Router();
 
-// POST /api/chat - Skills 模式
+const { processMessage, getStats: getConversationStats } = require('../services/conversation');
+
+// POST /api/chat - AI 驱动的多轮对话模式
 router.post('/', async (req, res) => {
+  try {
+    const { session_id, agent_id, message, model_id } = req.body;
+
+    if (!message) {
+      return res.status(400).json({ error: 'message 不能为空' });
+    }
+
+    // 如果没有 session_id，创建新的
+    const sessionId = session_id || uuidv4();
+
+    // 使用新的对话服务
+    const { response, steps, error } = await processMessage(sessionId, message, agent_id, model_id);
+
+    res.json({
+      session_id: sessionId,
+      agent_id,
+      response,
+      steps: steps || [],
+      model_id,
+      timestamp: new Date(),
+      error: error || null
+    });
+  } catch (err) {
+    console.error('Chat failed:', err);
+    res.status(500).json({ error: '对话处理失败: ' + err.message });
+  }
+});
+
+// POST /api/chat/skills - 旧版 Skills 模式（保留兼容）
+router.post('/skills', async (req, res) => {
   try {
     const { agent_id, message, model_id, skill_ids } = req.body;
 
@@ -584,9 +616,23 @@ router.post('/', async (req, res) => {
       timestamp: new Date(),
     });
   } catch (err) {
-    console.error('Chat failed:', err);
+    console.error('Skills Chat failed:', err);
     res.status(500).json({ error: '对话处理失败: ' + err.message });
   }
+});
+
+// GET /api/chat/stats - 获取对话统计
+router.get('/stats', (req, res) => {
+  const stats = getConversationStats();
+  res.json(stats);
+});
+
+// DELETE /api/chat/session/:session_id - 清除对话历史
+router.delete('/session/:session_id', (req, res) => {
+  const { session_id } = req.params;
+  const { clearHistory } = require('../services/conversation');
+  const cleared = clearHistory(session_id);
+  res.json({ success: cleared, session_id });
 });
 
 // GET /api/chat/mcp-tools - 获取可用的 MCP 工具列表

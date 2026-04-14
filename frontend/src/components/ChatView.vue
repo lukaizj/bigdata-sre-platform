@@ -31,6 +31,12 @@
           </svg>
           {{ selectedMCPs.length > 0 ? `${selectedMCPs.length}` : 'MCP' }}
         </el-button>
+        <el-button size="small" @click="clearChat" :disabled="messages.length === 0">
+          <svg class="btn-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"></path>
+          </svg>
+          清空
+        </el-button>
       </div>
     </div>
 
@@ -261,6 +267,7 @@ const messages = ref([])
 const inputMsg = ref('')
 const loading = ref(false)
 const messagesRef = ref(null)
+const sessionId = ref(null)
 
 const showSkillSelector = ref(false)
 const availableSkills = ref([])
@@ -271,6 +278,12 @@ import { STORAGE_KEYS } from '../utils/constants'
 
 const availableMCPs = ref([])
 const selectedMCPs = ref([])
+
+// 清除对话历史，开始新对话
+const clearChat = () => {
+  messages.value = []
+  sessionId.value = null
+}
 
 const loadSavedSelections = () => {
   const savedSkills = localStorage.getItem(STORAGE_KEYS.CHAT_SELECTED_SKILLS)
@@ -461,7 +474,7 @@ const copyMessage = async (content) => {
 }
 
 const send = async () => {
-  if (!inputMsg.value.trim() || !selectedAgent.value || loading.value) return
+  if (!inputMsg.value.trim() || loading.value) return
   const text = inputMsg.value.trim()
   messages.value.push({ role: 'user', content: text })
   inputMsg.value = ''
@@ -482,17 +495,18 @@ const send = async () => {
         steps: res.data.steps || []
       })
     } else {
-      // 使用 Skills 模式
+      // 使用新的 AI 驱动对话模式
       const res = await axios.post('/api/chat', {
+        session_id: sessionId.value,
         agent_id: selectedAgent.value,
         message: text,
-        model_id: selectedModel.value,
-        skill_ids: selectedSkills.value.length > 0 ? selectedSkills.value : undefined
+        model_id: selectedModel.value
       })
+      // 保存 session_id 用于后续对话
+      sessionId.value = res.data.session_id
       messages.value.push({
         role: 'assistant',
         content: res.data.response,
-        skills: res.data.skills || [],
         steps: res.data.steps || []
       })
     }
