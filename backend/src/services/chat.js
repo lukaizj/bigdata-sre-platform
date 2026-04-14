@@ -54,14 +54,13 @@ if (fs.existsSync(externalSkillsDir)) {
 }
 
 // 获取集群配置
-const { getClusterConfig } = require('../routes/settings');
+const { getClusterConfig, getSparkHistoryUrl } = require('../routes/settings');
 
 // CLI 技能执行器
 async function executeCliSkill(skillId, execPath, message, config) {
   try {
-    // 获取集群配置中的 Spark 地址
-    const clusterConfig = getClusterConfig();
-    const sparkUrl = clusterConfig?.spark?.historyUrl || 'http://localhost:18080';
+    // 使用全局 Spark History URL 配置
+    const sparkUrl = getSparkHistoryUrl() || config?.endpoint || 'http://localhost:18080';
 
     // 根据消息内容确定命令
     let cmdArgs = ['--json', '--server', sparkUrl];
