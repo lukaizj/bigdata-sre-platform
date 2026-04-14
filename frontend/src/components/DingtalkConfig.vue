@@ -114,6 +114,50 @@
       </div>
     </div>
 
+    <!-- 智能体映射配置 -->
+    <div class="mapping-section glass-card fade-in-up delay-3">
+      <div class="section-header">
+        <h4>
+          <span class="icon">🔗</span>
+          智能体映射
+        </h4>
+        <el-button type="primary" size="small" @click="showAddMappingDialog">
+          添加映射
+        </el-button>
+      </div>
+
+      <div class="mapping-description">
+        为不同的钉钉会话/群聊配置专属智能体，未配置的会话将使用默认智能体
+      </div>
+
+      <div v-if="mappings.length > 0" class="mapping-list">
+        <div v-for="mapping in mappings" :key="mapping.conversationId" class="mapping-item">
+          <div class="mapping-info">
+            <div class="mapping-id">
+              <span class="label">会话ID:</span>
+              <span class="value">{{ mapping.conversationId }}</span>
+            </div>
+            <div class="mapping-agent">
+              <span class="label">智能体:</span>
+              <span class="value">{{ mapping.agentName }}</span>
+            </div>
+          </div>
+          <el-button
+            type="danger"
+            size="small"
+            text
+            @click="deleteMapping(mapping.conversationId)"
+          >
+            删除
+          </el-button>
+        </div>
+      </div>
+      <div v-else class="empty-mapping">
+        <span class="empty-icon">📭</span>
+        <p>暂无智能体映射，点击"添加映射"按钮创建</p>
+      </div>
+    </div>
+
     <!-- 使用说明 -->
     <div class="guide-section glass-card fade-in-up delay-3">
       <div class="section-header">
@@ -157,6 +201,41 @@
         </div>
       </div>
     </div>
+
+    <!-- 添加映射对话框 -->
+    <el-dialog
+      v-model="addMappingDialogVisible"
+      title="添加智能体映射"
+      width="500px"
+    >
+      <el-form :model="newMapping" label-position="top">
+        <el-form-item label="会话ID" required>
+          <el-input
+            v-model="newMapping.conversationId"
+            placeholder="钉钉会话ID (如: conversation_xxx)"
+          />
+          <div class="form-hint">
+            在钉钉群中 @机器人 发送消息后，系统会自动获取会话ID
+          </div>
+        </el-form-item>
+        <el-form-item label="智能体" required>
+          <el-select v-model="newMapping.agentId" placeholder="选择智能体" style="width: 100%">
+            <el-option
+              v-for="agent in agents"
+              :key="agent.id"
+              :label="agent.name"
+              :value="agent.id"
+            />
+          </el-select>
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="addMappingDialogVisible = false">取消</el-button>
+        <el-button type="primary" @click="addMapping" :loading="addingMapping">
+          确定
+        </el-button>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
@@ -186,6 +265,13 @@ const testing = ref(false)
 const refreshing = ref(false)
 const loading = ref(false)
 const testResult = ref(null)
+const mappings = ref([])
+const addMappingDialogVisible = ref(false)
+const addingMapping = ref(false)
+const newMapping = ref({
+  conversationId: '',
+  agentId: '',
+})
 
 const loadConfig = async () => {
   loading.value = true
@@ -279,10 +365,57 @@ const testConnection = async () => {
   }
 }
 
+const loadAgentMappings = async () => {
+  try {
+    const res = await axios.get('/api/dingtalk/agent-mappings')
+    mappings.value = res.data.mappings || []
+  } catch (err) {
+    ElMessage.error('加载智能体映射失败')
+  }
+}
+
+const showAddMappingDialog = () => {
+  newMapping.value = {
+    conversationId: '',
+    agentId: '',
+  }
+  addMappingDialogVisible.value = true
+}
+
+const addMapping = async () => {
+  if (!newMapping.value.conversationId || !newMapping.value.agentId) {
+    ElMessage.warning('请填写会话ID和选择智能体')
+    return
+  }
+
+  addingMapping.value = true
+  try {
+    const res = await axios.post('/api/dingtalk/agent-mappings', newMapping.value)
+    mappings.value.push(res.data.mapping)
+    addMappingDialogVisible.value = false
+    ElMessage.success('映射添加成功')
+  } catch (err) {
+    ElMessage.error('添加映射失败: ' + (err.response?.data?.error || err.message))
+  } finally {
+    addingMapping.value = false
+  }
+}
+
+const deleteMapping = async (conversationId) => {
+  try {
+    await axios.delete(`/api/dingtalk/agent-mappings/${conversationId}`)
+    mappings.value = mappings.value.filter(m => m.conversationId !== conversationId)
+    ElMessage.success('映射删除成功')
+  } catch (err) {
+    ElMessage.error('删除映射失败: ' + (err.response?.data?.error || err.message))
+  }
+}
+
 onMounted(() => {
   loadConfig()
   loadAgents()
   refreshStatus()
+  loadAgentMappings()
 })
 </script>
 
@@ -442,6 +575,93 @@ onMounted(() => {
 
 .test-result.error {
   color: var(--danger);
+}
+
+/* 智能体映射区域 */
+.mapping-section {
+  padding: 24px;
+  margin-bottom: 20px;
+}
+
+.mapping-description {
+  font-size: 14px;
+  color: var(--text-secondary);
+  margin-bottom: 20px;
+  padding: 12px 16px;
+  background: rgba(99, 102, 241, 0.08);
+  border-radius: 8px;
+  border-left: 3px solid var(--accent);
+}
+
+.mapping-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.mapping-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px;
+  background: var(--bg-hover);
+  border-radius: 12px;
+  border: var(--border-light);
+  transition: all 0.2s ease;
+}
+
+.mapping-item:hover {
+  border-color: var(--accent);
+}
+
+.mapping-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.mapping-id,
+.mapping-agent {
+  display: flex;
+  gap: 8px;
+  font-size: 14px;
+}
+
+.mapping-id .label,
+.mapping-agent .label {
+  color: var(--text-muted);
+  min-width: 60px;
+}
+
+.mapping-id .value,
+.mapping-agent .value {
+  color: var(--text-primary);
+  font-family: monospace;
+}
+
+.empty-mapping {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 24px;
+  color: var(--text-muted);
+}
+
+.empty-icon {
+  font-size: 48px;
+  margin-bottom: 16px;
+}
+
+.empty-mapping p {
+  font-size: 14px;
+}
+
+.form-hint {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-top: 4px;
 }
 
 /* 使用说明区域 */

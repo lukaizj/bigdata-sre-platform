@@ -6,7 +6,12 @@ const config = require('../config');
 
 const router = express.Router();
 
-const JWT_SECRET = config.jwt?.secret || 'bigdata-sre-platform-secret-key-2026';
+// JWT密钥必须从配置获取，启动时会验证
+const JWT_SECRET = config.jwt?.secret;
+if (!JWT_SECRET) {
+  console.error('ERROR: JWT_SECRET is not configured. Please set jwt.secret in config.');
+  process.exit(1);
+}
 const JWT_EXPIRES = '24h';
 
 // 创建用户表

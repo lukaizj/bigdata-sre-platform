@@ -1,0 +1,79 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: bigdata-sre-backend
+    ports:
+      - "8080:8080"
+    environment:
+      - NODE_ENV=production
+      - DB_HOST=${DB_HOST:-db}
+      - DB_PORT=${DB_PORT:-3306}
+      - DB_USER=${DB_USER:-root}
+      - DB_PASSWORD=${DB_PASSWORD:-password}
+      - DB_NAME=${DB_NAME:-bigdata_sre}
+      - JWT_SECRET=${JWT_SECRET:-your-secret-key-change-in-production}
+    depends_on:
+      - db
+    restart: unless-stopped
+    networks:
+      - bigdata-network
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: bigdata-sre-frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    restart: unless-stopped
+    networks:
+      - bigdata-network
+
+  dingtalk-stream:
+    build:
+      context: ./dingtalk-stream
+      dockerfile: Dockerfile
+    container_name: bigdata-sre-dingtalk
+    ports:
+      - "3001:3001"
+    environment:
+      - NODE_ENV=production
+      - BACKEND_URL=${BACKEND_URL:-http://backend:8080}
+      - DINGTALK_APP_KEY=${DINGTALK_APP_KEY}
+      - DINGTALK_APP_SECRET=${DINGTALK_APP_SECRET}
+    depends_on:
+      - backend
+    restart: unless-stopped
+    networks:
+      - bigdata-network
+
+  db:
+    image: mysql:8.0
+    container_name: bigdata-sre-db
+    ports:
+      - "3306:3306"
+    environment:
+      - MYSQL_ROOT_PASSWORD=${DB_PASSWORD:-password}
+      - MYSQL_DATABASE=${DB_NAME:-bigdata_sre}
+      - MYSQL_USER=${DB_USER:-bigdata}
+      - MYSQL_PASSWORD=${DB_PASSWORD:-password}
+    volumes:
+      - mysql-data:/var/lib/mysql
+      # Uncomment and create init.sql if you need database initialization
+      # - ./backend/init.sql:/docker-entrypoint-initdb.d/init.sql
+    restart: unless-stopped
+    networks:
+      - bigdata-network
+
+networks:
+  bigdata-network:
+    driver: bridge
+
+volumes:
+  mysql-data:

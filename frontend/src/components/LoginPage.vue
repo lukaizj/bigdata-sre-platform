@@ -167,7 +167,7 @@
       <div class="theme-toggle">
         <button
           :class="['theme-btn', { active: currentTheme === 'light' }]"
-          @click="setTheme('light')"
+          @click="handleSetTheme('light')"
           title="白天模式"
         >
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -184,7 +184,7 @@
         </button>
         <button
           :class="['theme-btn', { active: currentTheme === 'dark' }]"
-          @click="setTheme('dark')"
+          @click="handleSetTheme('dark')"
           title="夜晚模式"
         >
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -285,6 +285,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import axios from 'axios'
+import { setTheme, initTheme } from '../utils/theme'
 
 const emit = defineEmits(['login-success'])
 
@@ -299,10 +300,9 @@ const showAbout = ref(false)
 const showHelp = ref(false)
 const currentTheme = ref('light')
 
-const setTheme = (theme) => {
+const handleSetTheme = (theme) => {
   currentTheme.value = theme
-  localStorage.setItem('theme', theme)
-  document.documentElement.setAttribute('data-theme', theme)
+  setTheme(theme)
 }
 
 const loginForm = ref({ email: '', password: '' })
@@ -355,10 +355,8 @@ const handleRegister = async () => {
 }
 
 onMounted(() => {
-  // 加载保存的主题
-  const savedTheme = localStorage.getItem('theme') || 'light'
-  currentTheme.value = savedTheme
-  document.documentElement.setAttribute('data-theme', savedTheme)
+  // 初始化主题
+  currentTheme.value = initTheme()
 
   const token = localStorage.getItem('token')
   const savedUser = localStorage.getItem('user')

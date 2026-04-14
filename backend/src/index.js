@@ -11,6 +11,7 @@ const skillsRouter = require('./routes/skills');
 const chatRouter = require('./routes/chat-mcp');
 const settingsRouter = require('./routes/settings');
 const authRouter = require('./routes/auth');
+const dingtalkRoutes = require('./routes/dingtalk');
 const { loadSettingsFromDB } = require('./routes/settings');
 const { initUserTable } = require('./routes/auth');
 
@@ -32,6 +33,7 @@ app.use('/api/agents', agentsRouter);
 app.use('/api/skills', skillsRouter);
 app.use('/api/chat', chatRouter);
 app.use('/api/settings', settingsRouter);
+app.use('/api/dingtalk', dingtalkRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {

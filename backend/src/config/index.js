@@ -14,6 +14,10 @@ const config = {
     password: process.env.DB_PASSWORD || '',
     database: process.env.DB_NAME || 'bigdata_sre',
   },
+  jwt: {
+    secret: process.env.JWT_SECRET,
+    expiresIn: process.env.JWT_EXPIRES_IN || '24h',
+  },
   hadoop: {
     namenodeUrl: process.env.HADOOP_NAMENODE_URL || 'http://localhost:9870',
     yarnUrl: process.env.HADOOP_YARN_URL || 'http://localhost:8088',

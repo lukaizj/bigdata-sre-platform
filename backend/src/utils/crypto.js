@@ -23,7 +23,20 @@ const getMasterKey = () => {
   return crypto.randomBytes(KEY_LENGTH);
 };
 
-const masterKey = getMasterKey();
+let masterKey = null;
+
+// 延迟获取密钥，允许测试时先设置环境变量
+const getOrCreateMasterKey = () => {
+  if (!masterKey) {
+    masterKey = getMasterKey();
+  }
+  return masterKey;
+};
+
+// 用于测试重置密钥
+const resetKey = () => {
+  masterKey = null;
+};
 
 /**
  * 加密文本
@@ -33,8 +46,9 @@ const masterKey = getMasterKey();
 function encrypt(text) {
   if (!text) return '';
 
+  const key = getOrCreateMasterKey();
   const iv = crypto.randomBytes(IV_LENGTH);
-  const cipher = crypto.createCipheriv(ALGORITHM, masterKey, iv);
+  const cipher = crypto.createCipheriv(ALGORITHM, key, iv);
 
   let encrypted = cipher.update(text, 'utf8', 'hex');
   encrypted += cipher.final('hex');
@@ -54,6 +68,7 @@ function decrypt(encryptedText) {
   if (!encryptedText) return '';
 
   try {
+    const key = getOrCreateMasterKey();
     const parts = encryptedText.split(':');
     if (parts.length !== 3) return '';
 
@@ -61,7 +76,7 @@ function decrypt(encryptedText) {
     const authTag = Buffer.from(parts[1], 'hex');
     const encrypted = parts[2];
 
-    const decipher = crypto.createDecipheriv(ALGORITHM, masterKey, iv);
+    const decipher = crypto.createDecipheriv(ALGORITHM, key, iv);
     decipher.setAuthTag(authTag);
 
     let decrypted = decipher.update(encrypted, 'hex', 'utf8');
@@ -78,4 +93,4 @@ function decrypt(encryptedText) {
   }
 }
 
-module.exports = { encrypt, decrypt };
+module.exports = { encrypt, decrypt, resetKey };

@@ -23,7 +23,7 @@ setInterval(() => {
   }
 }, 5 * 60 * 1000);
 
-function getUserSession(userId) {
+function getUserSession(userId, conversationId = null) {
   const now = Date.now();
 
   // 清理过期会话（仅在会话数较多时执行）
@@ -38,15 +38,30 @@ function getUserSession(userId) {
   let session = userSessions.get(userId);
   if (!session) {
     const config = getDingtalkConfig();
+    // 根据 conversationId 选择智能体
+    let initialAgentId = config.defaultAgentId;
+    if (conversationId && config.agentMappings && config.agentMappings[conversationId]) {
+      initialAgentId = config.agentMappings[conversationId];
+    }
+
     session = {
       userId,
-      currentAgentId: config.defaultAgentId,
+      currentAgentId: initialAgentId,
+      conversationId,
       lastActivityAt: now,
       messageCount: 0,
     };
     userSessions.set(userId, session);
   } else {
     session.lastActivityAt = now;
+    // 如果提供了 conversationId，更新会话的conversationId并检查映射
+    if (conversationId) {
+      session.conversationId = conversationId;
+      const config = getDingtalkConfig();
+      if (config.agentMappings && config.agentMappings[conversationId]) {
+        session.currentAgentId = config.agentMappings[conversationId];
+      }
+    }
   }
 
   return session;
@@ -115,7 +130,7 @@ async function getHelpMessage(session, agents) {
 async function processDingtalkMessage(message) {
   const { userId, userName, content, conversationId } = message;
 
-  const session = getUserSession(userId);
+  const session = getUserSession(userId, conversationId);
   session.messageCount++;
 
   // 预加载智能体列表，避免重复查询
@@ -171,8 +186,14 @@ function getStats() {
   };
 }
 
+// 重置会话（用于测试）
+function resetSessions() {
+  userSessions.clear();
+}
+
 module.exports = {
   processDingtalkMessage,
   getStats,
   getUserSession,
+  resetSessions,
 };

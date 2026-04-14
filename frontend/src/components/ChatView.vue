@@ -247,8 +247,11 @@
 </template>
 
 <script setup>
-import { ref, onMounted, nextTick, watch } from 'vue'
+import { ref, onMounted, nextTick, watch, onActivated } from 'vue'
 import axios from 'axios'
+
+// 组件名称，用于 KeepAlive
+defineOptions({ name: 'ChatView' })
 
 const agents = ref([])
 const selectedAgent = ref('')
@@ -508,12 +511,15 @@ const send = async () => {
 
 const formatMsg = (t) => t ? t.replace(/\n/g, '<br>') : ''
 
-onMounted(() => {
+onMounted(async () => {
   loadSavedSelections()
-  fetchAgents()
-  fetchModels()
-  fetchSkills()
-  fetchMCPs()
+  // 并行加载所有数据，提升初始化速度
+  await Promise.all([
+    fetchAgents(),
+    fetchModels(),
+    fetchSkills(),
+    fetchMCPs()
+  ])
 })
 </script>
 

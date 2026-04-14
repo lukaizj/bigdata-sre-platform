@@ -5,6 +5,9 @@ const { processDingtalkMessage, getStats } = require('../services/dingtalk');
 const { getDingtalkConfig, setDingtalkConfig, updateDingtalkStatus } = require('./settings');
 const Agent = require('../models/agent');
 
+// 导出 setDingtalkConfig 供其他模块使用
+module.exports.setDingtalkConfig = setDingtalkConfig;
+
 // POST /api/dingtalk/chat - 处理钉钉消息（内部接口，供 Stream 服务调用）
 router.post('/chat', async (req, res) => {
   try {
@@ -193,6 +196,86 @@ router.post('/update-status', async (req, res) => {
   } catch (err) {
     console.error('Update status error:', err);
     res.status(500).json({ error: 'Failed to update status' });
+  }
+});
+
+// GET /api/dingtalk/agent-mappings - 获取智能体映射列表
+router.get('/agent-mappings', async (req, res) => {
+  try {
+    const config = getDingtalkConfig();
+    const agents = await Agent.getAll();
+
+    const mappings = Object.entries(config.agentMappings || {}).map(([conversationId, agentId]) => {
+      const agent = agents.find(a => a.id === agentId);
+      return {
+        conversationId,
+        agentId,
+        agentName: agent?.name || '未知智能体',
+      };
+    });
+
+    res.json({
+      mappings,
+      defaultAgentId: config.defaultAgentId,
+      availableAgents: agents.map(a => ({ id: a.id, name: a.name })),
+    });
+  } catch (err) {
+    console.error('Get agent mappings error:', err);
+    res.status(500).json({ error: 'Failed to get agent mappings' });
+  }
+});
+
+// POST /api/dingtalk/agent-mappings - 添加智能体映射
+router.post('/agent-mappings', async (req, res) => {
+  try {
+    const { conversationId, agentId } = req.body;
+
+    if (!conversationId || !agentId) {
+      return res.status(400).json({ error: 'conversationId and agentId are required' });
+    }
+
+    const config = getDingtalkConfig();
+    const agentMappings = config.agentMappings || {};
+    agentMappings[conversationId] = agentId;
+
+    await setDingtalkConfig({ ...config, agentMappings });
+
+    const agents = await Agent.getAll();
+    const agent = agents.find(a => a.id === agentId);
+
+    res.json({
+      success: true,
+      mapping: {
+        conversationId,
+        agentId,
+        agentName: agent?.name || '未知智能体',
+      },
+    });
+  } catch (err) {
+    console.error('Add agent mapping error:', err);
+    res.status(500).json({ error: 'Failed to add agent mapping' });
+  }
+});
+
+// DELETE /api/dingtalk/agent-mappings/:conversationId - 删除智能体映射
+router.delete('/agent-mappings/:conversationId', async (req, res) => {
+  try {
+    const { conversationId } = req.params;
+
+    const config = getDingtalkConfig();
+    const agentMappings = config.agentMappings || {};
+
+    if (!agentMappings[conversationId]) {
+      return res.status(404).json({ error: 'Mapping not found' });
+    }
+
+    delete agentMappings[conversationId];
+    await setDingtalkConfig({ ...config, agentMappings });
+
+    res.json({ success: true });
+  } catch (err) {
+    console.error('Delete agent mapping error:', err);
+    res.status(500).json({ error: 'Failed to delete agent mapping' });
   }
 });
 

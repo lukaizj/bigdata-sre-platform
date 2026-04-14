@@ -56,6 +56,7 @@ let memorySettings = {
     connected: false,
     messageCount: 0,
     lastMessageAt: null,
+    agentMappings: {}, // 会话ID -> 智能体ID 映射
   },
 };
 

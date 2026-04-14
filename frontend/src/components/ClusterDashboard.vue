@@ -172,8 +172,11 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, watch, onActivated, defineOptions } from 'vue'
 import axios from 'axios'
+
+// 组件名称，用于 KeepAlive
+defineOptions({ name: 'ClusterDashboard' })
 
 const clusters = ref([])
 const selectedClusterId = ref('')
@@ -220,7 +223,7 @@ const loadClusters = async () => {
 
 const selectCluster = (id) => {
   selectedClusterId.value = id
-  refreshAll()
+  // watch 会自动触发 refreshAll，无需重复调用
 }
 
 const refreshAll = async () => {
