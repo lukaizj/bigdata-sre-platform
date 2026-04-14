@@ -2,14 +2,25 @@ const Agent = require('../models/agent');
 const { handleChat } = require('./chat');
 const { getDingtalkConfig } = require('../routes/settings');
 
-// 内存存储用户会话状态
 const userSessions = new Map();
-
-// 会话过期时间（30分钟）
 const SESSION_EXPIRE_MS = 30 * 60 * 1000;
 
-// 定期清理过期会话（每5分钟）
-setInterval(() => {
+// Agent cache with 5-minute TTL
+let agentCache = null;
+let agentCacheExpiry = 0;
+const AGENT_CACHE_TTL = 5 * 60 * 1000;
+
+async function getCachedAgents() {
+  const now = Date.now();
+  if (agentCache && now < agentCacheExpiry) {
+    return agentCache;
+  }
+  agentCache = await Agent.getAll();
+  agentCacheExpiry = now + AGENT_CACHE_TTL;
+  return agentCache;
+}
+
+function cleanupExpiredSessions() {
   const now = Date.now();
   let cleaned = 0;
   for (const [id, session] of userSessions.entries()) {
@@ -21,32 +32,26 @@ setInterval(() => {
   if (cleaned > 0) {
     console.log(`Cleaned ${cleaned} expired dingtalk sessions`);
   }
-}, 5 * 60 * 1000);
+}
+
+setInterval(cleanupExpiredSessions, 5 * 60 * 1000);
+
+function resolveAgentId(conversationId, config) {
+  if (conversationId && config.agentMappings?.[conversationId]) {
+    return config.agentMappings[conversationId];
+  }
+  return config.defaultAgentId;
+}
 
 function getUserSession(userId, conversationId = null) {
   const now = Date.now();
-
-  // 清理过期会话（仅在会话数较多时执行）
-  if (userSessions.size > 1000) {
-    for (const [id, session] of userSessions.entries()) {
-      if (now - session.lastActivityAt > SESSION_EXPIRE_MS) {
-        userSessions.delete(id);
-      }
-    }
-  }
+  const config = getDingtalkConfig();
 
   let session = userSessions.get(userId);
   if (!session) {
-    const config = getDingtalkConfig();
-    // 根据 conversationId 选择智能体
-    let initialAgentId = config.defaultAgentId;
-    if (conversationId && config.agentMappings && config.agentMappings[conversationId]) {
-      initialAgentId = config.agentMappings[conversationId];
-    }
-
     session = {
       userId,
-      currentAgentId: initialAgentId,
+      currentAgentId: resolveAgentId(conversationId, config),
       conversationId,
       lastActivityAt: now,
       messageCount: 0,
@@ -54,13 +59,9 @@ function getUserSession(userId, conversationId = null) {
     userSessions.set(userId, session);
   } else {
     session.lastActivityAt = now;
-    // 如果提供了 conversationId，更新会话的conversationId并检查映射
     if (conversationId) {
       session.conversationId = conversationId;
-      const config = getDingtalkConfig();
-      if (config.agentMappings && config.agentMappings[conversationId]) {
-        session.currentAgentId = config.agentMappings[conversationId];
-      }
+      session.currentAgentId = resolveAgentId(conversationId, config);
     }
   }
 
@@ -133,8 +134,7 @@ async function processDingtalkMessage(message) {
   const session = getUserSession(userId, conversationId);
   session.messageCount++;
 
-  // 预加载智能体列表，避免重复查询
-  const agents = await Agent.getAll();
+  const agents = await getCachedAgents();
 
   const commandResult = await handleCommand(content, session, agents);
   if (commandResult) {
@@ -180,9 +180,13 @@ async function processDingtalkMessage(message) {
 }
 
 function getStats() {
+  let totalMessages = 0;
+  for (const session of userSessions.values()) {
+    totalMessages += session.messageCount;
+  }
   return {
     activeSessions: userSessions.size,
-    totalMessages: Array.from(userSessions.values()).reduce((sum, s) => sum + s.messageCount, 0),
+    totalMessages,
   };
 }
 
@@ -196,4 +200,5 @@ module.exports = {
   getStats,
   getUserSession,
   resetSessions,
+  invalidateAgentCache: () => { agentCache = null; agentCacheExpiry = 0; },
 };

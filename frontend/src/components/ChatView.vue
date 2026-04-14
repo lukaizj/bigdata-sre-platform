@@ -267,37 +267,32 @@ const availableSkills = ref([])
 const selectedSkills = ref([])
 
 const showMCPSelector = ref(false)
+import { STORAGE_KEYS } from '../utils/constants'
+
 const availableMCPs = ref([])
 const selectedMCPs = ref([])
 
-// 本地存储键名
-const STORAGE_KEY_SKILLS = 'chat_selected_skills'
-const STORAGE_KEY_AGENT = 'chat_selected_agent'
-const STORAGE_KEY_MODEL = 'chat_selected_model'
-
-// 从 localStorage 加载保存的选择
 const loadSavedSelections = () => {
-  const savedSkills = localStorage.getItem(STORAGE_KEY_SKILLS)
+  const savedSkills = localStorage.getItem(STORAGE_KEYS.CHAT_SELECTED_SKILLS)
   if (savedSkills) {
     try {
       selectedSkills.value = JSON.parse(savedSkills)
     } catch (e) {}
   }
-  const savedAgent = localStorage.getItem(STORAGE_KEY_AGENT)
+  const savedAgent = localStorage.getItem(STORAGE_KEYS.CHAT_SELECTED_AGENT)
   if (savedAgent) {
     selectedAgent.value = savedAgent
   }
-  const savedModel = localStorage.getItem(STORAGE_KEY_MODEL)
+  const savedModel = localStorage.getItem(STORAGE_KEYS.CHAT_SELECTED_MODEL)
   if (savedModel) {
     selectedModel.value = savedModel
   }
 }
 
-// 保存选择到 localStorage
 const saveSelections = () => {
-  localStorage.setItem(STORAGE_KEY_SKILLS, JSON.stringify(selectedSkills.value))
-  localStorage.setItem(STORAGE_KEY_AGENT, selectedAgent.value)
-  localStorage.setItem(STORAGE_KEY_MODEL, selectedModel.value)
+  localStorage.setItem(STORAGE_KEYS.CHAT_SELECTED_SKILLS, JSON.stringify(selectedSkills.value))
+  localStorage.setItem(STORAGE_KEYS.CHAT_SELECTED_AGENT, selectedAgent.value)
+  localStorage.setItem(STORAGE_KEYS.CHAT_SELECTED_MODEL, selectedModel.value)
 }
 
 // 监听变化自动保存

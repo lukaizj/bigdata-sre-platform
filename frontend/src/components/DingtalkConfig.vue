@@ -23,7 +23,7 @@
           <div class="status-info">
             <h5>连接状态</h5>
             <span :class="['status-badge', connectionStatus]">
-              {{ connectionStatus === 'connected' ? '已连接' : connectionStatus === 'disconnected' ? '未连接' : '未知' }}
+              {{ statusLabel }}
             </span>
           </div>
         </div>
@@ -33,8 +33,7 @@
           <div class="status-info">
             <h5>消息统计</h5>
             <div class="message-stats">
-              <span class="stat-item">接收: {{ messageStats.received || 0 }}</span>
-              <span class="stat-item">发送: {{ messageStats.sent || 0 }}</span>
+              <span class="stat-item">消息数: {{ messageCount }}</span>
             </div>
           </div>
         </div>
@@ -240,11 +239,23 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import axios from 'axios'
 
 defineOptions({ name: 'DingtalkConfig' })
+
+const CONNECTION_STATUS = {
+  CONNECTED: 'connected',
+  DISCONNECTED: 'disconnected',
+  UNKNOWN: 'unknown'
+}
+
+const statusLabels = {
+  [CONNECTION_STATUS.CONNECTED]: '已连接',
+  [CONNECTION_STATUS.DISCONNECTED]: '未连接',
+  [CONNECTION_STATUS.UNKNOWN]: '未知'
+}
 
 const config = ref({
   clientId: '',
@@ -254,12 +265,8 @@ const config = ref({
 })
 
 const agents = ref([])
-const connectionStatus = ref('unknown')
-const messageStats = ref({
-  received: 0,
-  sent: 0,
-})
-const currentAgentName = ref('')
+const connectionStatus = ref(CONNECTION_STATUS.UNKNOWN)
+const messageCount = ref(0)
 const saving = ref(false)
 const testing = ref(false)
 const refreshing = ref(false)
@@ -273,6 +280,14 @@ const newMapping = ref({
   agentId: '',
 })
 
+const currentAgentName = computed(() => {
+  if (!config.value.defaultAgentId || agents.value.length === 0) return ''
+  const agent = agents.value.find(a => a.id === config.value.defaultAgentId)
+  return agent?.name || ''
+})
+
+const statusLabel = computed(() => statusLabels[connectionStatus.value])
+
 const loadConfig = async () => {
   loading.value = true
   try {
@@ -282,11 +297,7 @@ const loadConfig = async () => {
       config.value.clientSecret = res.data.clientSecret || ''
       config.value.defaultAgentId = res.data.defaultAgentId || ''
       config.value.enabled = res.data.enabled || false
-      // 从 availableAgents 中找到当前智能体名称
-      if (res.data.defaultAgentId && res.data.availableAgents) {
-        const agent = res.data.availableAgents.find(a => a.id === res.data.defaultAgentId)
-        currentAgentName.value = agent?.name || ''
-      }
+      agents.value = res.data.availableAgents || []
     }
   } catch (err) {
     ElMessage.error('加载配置失败，请刷新页面重试')
@@ -309,16 +320,8 @@ const refreshStatus = async () => {
   try {
     const res = await axios.get('/api/dingtalk/status')
     if (res.data) {
-      connectionStatus.value = res.data.connected ? 'connected' : 'disconnected'
-      messageStats.value = {
-        received: res.data.messageCount || 0,
-        sent: res.data.messageCount || 0,
-      }
-      // 如果状态返回了默认智能体名称
-      if (res.data.defaultAgentId && agents.value.length > 0) {
-        const agent = agents.value.find(a => a.id === res.data.defaultAgentId)
-        currentAgentName.value = agent?.name || ''
-      }
+      connectionStatus.value = res.data.connected ? CONNECTION_STATUS.CONNECTED : CONNECTION_STATUS.DISCONNECTED
+      messageCount.value = res.data.messageCount || 0
     }
   } catch (err) {
     ElMessage.error('刷新状态失败')
@@ -337,7 +340,6 @@ const saveConfig = async () => {
   try {
     await axios.put('/api/dingtalk/config', config.value)
     ElMessage.success('配置保存成功')
-    refreshStatus()
   } catch (err) {
     ElMessage.error('保存失败: ' + (err.response?.data?.error || err.message))
   } finally {
@@ -356,10 +358,10 @@ const testConnection = async () => {
   try {
     await axios.post('/api/dingtalk/test-connection', config.value)
     testResult.value = { success: true, message: '连接测试成功' }
-    connectionStatus.value = 'connected'
+    connectionStatus.value = CONNECTION_STATUS.CONNECTED
   } catch (err) {
     testResult.value = { success: false, message: '连接失败: ' + (err.response?.data?.error || err.message) }
-    connectionStatus.value = 'disconnected'
+    connectionStatus.value = CONNECTION_STATUS.DISCONNECTED
   } finally {
     testing.value = false
   }
