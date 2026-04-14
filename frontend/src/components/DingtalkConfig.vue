@@ -353,10 +353,18 @@ const testConnection = async () => {
     return
   }
 
+  if (config.value.clientSecret === '********') {
+    ElMessage.warning('Client Secret 显示为遮蔽值，请重新输入真实值后测试')
+    return
+  }
+
   testing.value = true
   testResult.value = null
   try {
-    await axios.post('/api/dingtalk/test-connection', config.value)
+    await axios.post('/api/dingtalk/test-connection', {
+      clientId: config.value.clientId,
+      clientSecret: config.value.clientSecret
+    })
     testResult.value = { success: true, message: '连接测试成功' }
     connectionStatus.value = CONNECTION_STATUS.CONNECTED
   } catch (err) {
