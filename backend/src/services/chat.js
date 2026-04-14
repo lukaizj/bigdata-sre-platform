@@ -182,7 +182,13 @@ async function handleChat(agentId, message) {
           status: 'running'
         });
 
-        response = await generateResponse(message, result.data, agentSkills);
+        // 截断数据避免 AI API 超载（最多传 50 条记录）
+        let dataForAI = result.data;
+        if (Array.isArray(dataForAI) && dataForAI.length > 50) {
+          dataForAI = dataForAI.slice(0, 50);
+        }
+
+        response = await generateResponse(message, dataForAI, agentSkills);
         lastResult = result.data;
 
         executionSteps[executionSteps.length - 1].status = 'success';
