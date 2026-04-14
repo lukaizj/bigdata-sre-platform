@@ -6,7 +6,11 @@ const config = require('../../src/config');
  */
 async function execute(message, skillConfig, previousResult) {
   const sparkUrl = skillConfig.endpoint || config.spark.historyUrl;
-  const timeout = skillConfig.timeout || 30000;
+  // timeout 应该至少 5000ms，如果传入值太小则使用默认值
+  let timeout = parseInt(skillConfig.timeout) || 10000;
+  if (timeout < 1000) timeout = 10000;  // 小于 1 秒则用默认值
+
+  console.log(`[Spark] Using URL: ${sparkUrl}, timeout: ${timeout}ms`);
 
   const intent = parseIntent(message);
 
@@ -86,7 +90,9 @@ async function listApplications(sparkUrl, status, timeout) {
   if (status) {
     url += `?status=${status}`;
   }
-  const response = await axios.get(url, { timeout });
+  console.log(`[Spark] Fetching applications from: ${url}`);
+  const response = await axios.get(url, { timeout, headers: { 'Accept': 'application/json' } });
+  console.log(`[Spark] Received ${response.data?.length || 0} applications`);
   return response.data;
 }
 

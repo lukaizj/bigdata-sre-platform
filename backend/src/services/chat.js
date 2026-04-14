@@ -46,7 +46,32 @@ if (fs.existsSync(externalSkillsDir)) {
 }
 
 // 获取集群配置
-const { getClusterConfig, getSparkHistoryUrl } = require('../routes/settings');
+const { getClusterConfig, getSparkHistoryUrl, getAIConfig } = require('../routes/settings');
+
+/**
+ * 获取技能执行配置
+ */
+function getSkillConfig(skillId) {
+  const config = {};
+
+  // Spark 查询技能需要 Spark History Server URL
+  if (skillId === 'spark-query') {
+    const sparkUrl = getSparkHistoryUrl();
+    console.log(`[Skill Config] spark-query endpoint: ${sparkUrl}`);
+    config.endpoint = sparkUrl;
+  }
+
+  // HDFS/YARN 查询需要集群配置
+  if (skillId === 'hdfs-query' || skillId === 'yarn-query') {
+    const clusterConfig = getClusterConfig();
+    if (clusterConfig?.hadoop) {
+      config.namenodeUrl = clusterConfig.hadoop.namenodeUrl;
+      config.yarnUrl = clusterConfig.hadoop.yarnUrl;
+    }
+  }
+
+  return config;
+}
 
 /**
  * 处理对话消息
@@ -136,7 +161,9 @@ async function handleChat(agentId, message) {
     });
 
     try {
-      const result = await executor.execute(message, skill?.config || {}, lastResult);
+      // 获取技能特定的配置
+      const skillConfig = { ...skill?.config, ...getSkillConfig(skillId) };
+      const result = await executor.execute(message, skillConfig, lastResult);
 
       if (result.error) {
         executionSteps[executionSteps.length - 1].status = 'error';
