@@ -1,4 +1,5 @@
 const express = require('express');
+const axios = require('axios');
 const router = express.Router();
 const { processDingtalkMessage, getStats } = require('../services/dingtalk');
 const { getDingtalkConfig, setDingtalkConfig, updateDingtalkStatus } = require('./settings');
@@ -111,7 +112,7 @@ router.put('/config', async (req, res) => {
   }
 });
 
-// POST /api/dingtalk/test-connection - 验证配置格式
+// POST /api/dingtalk/test-connection - 实际调用钉钉 API 验证配置
 router.post('/test-connection', async (req, res) => {
   try {
     const { clientId, clientSecret } = req.body;
@@ -124,11 +125,57 @@ router.post('/test-connection', async (req, res) => {
       return res.status(400).json({ error: 'Invalid Client ID or Client Secret format' });
     }
 
-    // 注意：这里仅验证格式，实际连接测试需要在 Stream 服务启动后进行
-    res.json({ success: true, message: 'Configuration format is valid. Actual connection will be tested when Stream service starts.' });
+    // 实际调用钉钉 API 验证配置
+    try {
+      const tokenResponse = await axios.post(
+        'https://api.dingtalk.com/v1.0/oauth2/accessToken',
+        {
+          clientId: clientId,
+          clientSecret: clientSecret
+        },
+        {
+          headers: { 'Content-Type': 'application/json' },
+          timeout: 10000
+        }
+      );
+
+      if (tokenResponse.data && tokenResponse.data.accessToken) {
+        res.json({
+          success: true,
+          message: '连接测试成功，凭证有效',
+          expireIn: tokenResponse.data.expireIn
+        });
+      } else {
+        res.status(400).json({
+          error: '钉钉 API 返回异常响应',
+          details: tokenResponse.data
+        });
+      }
+    } catch (dingtalkErr) {
+      const errorMsg = dingtalkErr.response?.data?.message || dingtalkErr.message;
+      res.status(400).json({
+        error: `钉钉 API 验证失败: ${errorMsg}`,
+        details: dingtalkErr.response?.data
+      });
+    }
   } catch (err) {
     console.error('Test connection error:', err);
     res.status(500).json({ error: 'Failed to test connection' });
+  }
+});
+
+// GET /api/dingtalk/health - 健康检查（供 Stream 服务调用）
+router.get('/health', async (req, res) => {
+  try {
+    const config = getDingtalkConfig();
+    res.json({
+      status: 'ok',
+      enabled: config.enabled,
+      hasConfig: !!config.clientId && !!config.clientSecret,
+      timestamp: new Date().toISOString()
+    });
+  } catch (err) {
+    res.status(500).json({ status: 'error', message: err.message });
   }
 });
 
