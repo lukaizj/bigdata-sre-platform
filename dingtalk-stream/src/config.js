@@ -106,6 +106,39 @@ class Config {
     this.loaded = false;
     return await this.load();
   }
+
+  /**
+   * Validate configuration
+   * @returns {Object} - Validation result { valid: boolean, errors: string[] }
+   */
+  validate() {
+    const errors = [];
+
+    if (!this.config.clientId) {
+      errors.push('Missing DINGTALK_CLIENT_ID');
+    }
+
+    if (!this.config.clientSecret) {
+      errors.push('Missing DINGTALK_CLIENT_SECRET');
+    }
+
+    if (!this.config.backendUrl) {
+      errors.push('Missing BACKEND_URL');
+    }
+
+    if (this.config.clientId && this.config.clientId.length < 10) {
+      errors.push('DINGTALK_CLIENT_ID appears to be invalid (too short)');
+    }
+
+    if (this.config.clientSecret && this.config.clientSecret.length < 10) {
+      errors.push('DINGTALK_CLIENT_SECRET appears to be invalid (too short)');
+    }
+
+    return {
+      valid: errors.length === 0,
+      errors: errors
+    };
+  }
 }
 
 module.exports = new Config();

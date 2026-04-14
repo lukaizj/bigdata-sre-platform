@@ -187,6 +187,33 @@ class MessageHandler {
     // 2. Send alert notifications
     // 3. Report metrics to monitoring system
   }
+
+  /**
+   * Format reply message for DingTalk
+   * @param {string} text - Response text from backend
+   * @returns {Object} - Formatted message for DingTalk API
+   */
+  formatReply(text) {
+    // DingTalk message length limit
+    const maxLength = 2000;
+
+    if (!text) {
+      return { msgtype: 'text', text: { content: '处理失败，请稍后重试' } };
+    }
+
+    // Truncate if too long
+    let content = text;
+    if (text.length > maxLength) {
+      content = text.substring(0, maxLength) + '\n\n...（消息已截断）';
+    }
+
+    return {
+      msgtype: 'text',
+      text: {
+        content: content
+      }
+    };
+  }
 }
 
 module.exports = MessageHandler;
