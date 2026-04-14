@@ -42,18 +42,28 @@ class ApiClient {
 
   /**
    * Send message to backend for processing
-   * @param {Object} message - DingTalk message object
+   * Backend API expects: { userId, userName, content, conversationId }
    */
   async sendMessage(message) {
     try {
-      logger.debug('Sending message to backend:', { message });
-
-      const response = await this.client.post('/api/dingtalk/chat', {
-        message: message
+      logger.debug('Sending message to backend:', {
+        conversationId: message.conversationId,
+        senderId: message.senderId
       });
 
-      logger.debug('Message sent to backend successfully:', {
-        messageId: response.data?.data?.messageId
+      // 转换为 backend API 期望的格式
+      const payload = {
+        userId: message.senderId,
+        userName: message.senderNick,
+        content: message.content?.text || '',
+        conversationId: message.conversationId,
+        messageType: message.msgtype
+      };
+
+      const response = await this.client.post('/api/dingtalk/chat', payload);
+
+      logger.debug('Message processed by backend:', {
+        success: response.data?.success
       });
 
       return response.data;
@@ -65,24 +75,22 @@ class ApiClient {
 
   /**
    * Update stream client status
-   * @param {string} status - Status (connected, disconnected, reconnecting, error)
-   * @param {Object} metadata - Additional metadata
+   * Backend API expects: { connected, error }
    */
-  async updateStatus(status, metadata = {}) {
+  async updateStatus(connected, error = null) {
     try {
-      logger.debug('Updating status:', { status, metadata });
+      logger.debug('Updating status:', { connected, error });
 
       const response = await this.client.post('/api/dingtalk/update-status', {
-        status: status,
-        metadata: metadata,
-        timestamp: new Date().toISOString()
+        connected: connected,
+        error: error
       });
 
       logger.debug('Status updated successfully');
       return response.data;
     } catch (error) {
       logger.error('Failed to update status:', error);
-      throw error;
+      // 不抛出错误，状态更新失败不应阻塞主流程
     }
   }
 
