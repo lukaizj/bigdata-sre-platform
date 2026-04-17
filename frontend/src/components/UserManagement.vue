@@ -7,7 +7,7 @@
         <p>管理您的账户信息</p>
       </div>
 
-      <div class="profile-card glass-card">
+      <div class="profile-card card">
         <div class="profile-header">
           <div class="profile-avatar">{{ currentUser?.username?.charAt(0)?.toUpperCase() || 'U' }}</div>
           <div class="profile-info">
@@ -59,7 +59,7 @@
 
       <!-- 统计卡片 -->
       <div class="stats-row">
-        <div class="stat-card glass-card stat-card-blue">
+        <div class="stat-card card stat-card-blue">
           <div class="stat-icon">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
@@ -73,7 +73,7 @@
             <span class="stat-label">总用户数</span>
           </div>
         </div>
-        <div class="stat-card glass-card stat-card-purple">
+        <div class="stat-card card stat-card-purple">
           <div class="stat-icon">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M12 2L15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2z"></path>
@@ -84,7 +84,7 @@
             <span class="stat-label">管理员</span>
           </div>
         </div>
-        <div class="stat-card glass-card stat-card-cyan">
+        <div class="stat-card card stat-card-cyan">
           <div class="stat-icon">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
@@ -99,7 +99,7 @@
       </div>
 
       <!-- 用户列表 -->
-      <div class="user-list glass-card">
+      <div class="user-list card">
         <div class="list-header">
           <h4>用户列表</h4>
           <div class="search-box">
@@ -117,7 +117,6 @@
         </div>
 
         <div v-else-if="filteredUsers.length === 0" class="empty-state">
-          <span>🔍</span>
           <p>没有找到匹配的用户</p>
         </div>
 
@@ -148,7 +147,7 @@
             <div class="col-email">{{ user.email }}</div>
             <div class="col-role">
               <span :class="['role-badge', user.role]">
-                {{ user.role === 'admin' ? '👑 管理员' : '👤 普通用户' }}
+                {{ user.role === 'admin' ? '管理员' : '普通用户' }}
               </span>
             </div>
             <div class="col-date">{{ formatDate(user.created_at) }}</div>
@@ -185,8 +184,8 @@
         </el-form-item>
         <el-form-item label="角色">
           <el-select v-model="editForm.role" style="width: 100%" @change="onRoleChange">
-            <el-option label="👑 管理员" value="admin" />
-            <el-option label="👤 普通用户" value="user" />
+            <el-option label="管理员" value="admin" />
+            <el-option label="普通用户" value="user" />
           </el-select>
         </el-form-item>
         <el-form-item label="重置密码">
@@ -534,29 +533,22 @@ onMounted(() => {
 .stat-icon {
   width: 48px;
   height: 48px;
-  border-radius: 12px;
+  border-radius: var(--radius-md);
   display: flex;
   align-items: center;
   justify-content: center;
+  background: var(--bg-hover);
 }
 .stat-icon svg {
   width: 24px;
   height: 24px;
-}
-.stat-card-blue .stat-icon {
-  background: rgba(99, 102, 241, 0.15);
+  color: var(--accent);
 }
 .stat-card-blue .stat-icon svg {
   color: var(--accent);
 }
-.stat-card-purple .stat-icon {
-  background: rgba(139, 92, 246, 0.15);
-}
 .stat-card-purple .stat-icon svg {
   color: var(--purple);
-}
-.stat-card-cyan .stat-icon {
-  background: rgba(6, 182, 212, 0.15);
 }
 .stat-card-cyan .stat-icon svg {
   color: var(--info);
@@ -598,8 +590,8 @@ onMounted(() => {
 
 .search-box input {
   padding: 10px 16px;
-  border: var(--border-light);
-  border-radius: 10px;
+  border: var(--border-medium-line);
+  border-radius: var(--radius-sm);
   background: var(--bg-hover);
   color: var(--text-primary);
   font-size: 14px;
@@ -610,13 +602,13 @@ onMounted(() => {
 .search-box input:focus {
   outline: none;
   border-color: var(--accent);
-  background: var(--bg-card);
+  background: var(--bg-primary);
 }
 
 /* 表格 */
 .user-table {
-  border: var(--border-light);
-  border-radius: 12px;
+  border: var(--border-medium-line);
+  border-radius: var(--radius-md);
   overflow: hidden;
 }
 
@@ -636,7 +628,7 @@ onMounted(() => {
   grid-template-columns: 60px 1fr 1.5fr 120px 120px 120px 100px;
   gap: 16px;
   padding: 16px 20px;
-  border-top: var(--border-light);
+  border-top: var(--border-weak-line);
   align-items: center;
   font-size: 14px;
   transition: background 0.2s ease;
@@ -647,14 +639,14 @@ onMounted(() => {
 }
 
 .table-row.is-current {
-  background: rgba(59, 130, 246, 0.08);
+  background: var(--bg-hover);
 }
 
 .avatar {
   width: 40px;
   height: 40px;
-  background: var(--gradient-primary);
-  border-radius: 10px;
+  background: var(--accent);
+  border-radius: var(--radius-sm);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -672,10 +664,10 @@ onMounted(() => {
   display: inline-block;
   margin-left: 8px;
   padding: 2px 8px;
-  background: linear-gradient(135deg, rgba(99, 102, 241, 0.15), rgba(139, 92, 246, 0.15));
-  border-radius: 4px;
+  background: var(--tag-blue-bg);
+  color: var(--tag-blue-text);
+  border-radius: var(--radius-sm);
   font-size: 11px;
-  color: var(--accent);
 }
 
 .col-email {
@@ -685,17 +677,17 @@ onMounted(() => {
 .role-badge {
   display: inline-block;
   padding: 4px 10px;
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   font-size: 12px;
 }
 
 .role-badge.admin {
-  background: rgba(245, 158, 11, 0.15);
-  color: var(--warning);
+  background: var(--tag-orange-bg);
+  color: var(--tag-orange-text);
 }
 
 .role-badge.user {
-  background: rgba(100, 116, 139, 0.15);
+  background: var(--bg-hover);
   color: var(--text-muted);
 }
 
@@ -714,7 +706,7 @@ onMounted(() => {
   height: 32px;
   border: none;
   background: var(--bg-hover);
-  border-radius: 8px;
+  border-radius: var(--radius-sm);
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -724,12 +716,12 @@ onMounted(() => {
 }
 
 .btn-icon:hover {
-  background: rgba(59, 130, 246, 0.15);
+  background: var(--bg-hover);
   color: var(--accent);
 }
 
 .btn-icon.danger:hover {
-  background: rgba(239, 68, 68, 0.15);
+  background: var(--tag-red-bg);
   color: var(--danger);
 }
 
@@ -752,14 +744,10 @@ onMounted(() => {
 .spinner {
   width: 24px;
   height: 24px;
-  border: 2px solid var(--border-light);
+  border: 2px solid var(--border-medium);
   border-top-color: var(--accent);
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
-}
-
-@keyframes spin {
-  to { transform: rotate(360deg); }
 }
 
 .empty-state span {
@@ -773,15 +761,15 @@ onMounted(() => {
   gap: 8px;
   padding: 12px;
   background: var(--bg-hover);
-  border-radius: 10px;
+  border-radius: var(--radius-sm);
   margin-top: 8px;
 }
 
 .permissions-grid :deep(.el-checkbox) {
   margin-right: 0;
   padding: 8px 12px;
-  background: var(--bg-card);
-  border-radius: 8px;
+  background: var(--bg-primary);
+  border-radius: var(--radius-sm);
   transition: all 0.2s ease;
 }
 
@@ -790,7 +778,7 @@ onMounted(() => {
 }
 
 .permissions-grid :deep(.el-checkbox.is-checked) {
-  background: rgba(59, 130, 246, 0.1);
+  background: var(--tag-blue-bg);
 }
 
 .permissions-tip {
@@ -811,14 +799,14 @@ onMounted(() => {
   gap: 20px;
   margin-bottom: 24px;
   padding-bottom: 24px;
-  border-bottom: var(--border-light);
+  border-bottom: var(--border-weak-line);
 }
 
 .profile-avatar {
   width: 72px;
   height: 72px;
-  background: var(--gradient-primary);
-  border-radius: 20px;
+  background: var(--accent);
+  border-radius: var(--radius-lg);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -851,7 +839,7 @@ onMounted(() => {
   justify-content: space-between;
   padding: 12px 16px;
   background: var(--bg-hover);
-  border-radius: 10px;
+  border-radius: var(--radius-sm);
 }
 
 .detail-label {
@@ -878,7 +866,7 @@ onMounted(() => {
   justify-content: center;
   gap: 8px;
   padding: 14px 20px;
-  border-radius: 12px;
+  border-radius: var(--radius-md);
   font-size: 15px;
   font-weight: 500;
   cursor: pointer;
@@ -886,23 +874,23 @@ onMounted(() => {
 }
 
 .btn-primary {
-  background: var(--gradient-primary);
+  background: var(--accent);
   border: none;
   color: white;
 }
 
 .btn-primary:hover {
-  filter: brightness(1.1);
+  opacity: 0.9;
 }
 
 .btn-secondary {
   background: var(--bg-hover);
-  border: var(--border-light);
+  border: var(--border-medium-line);
   color: var(--text-secondary);
 }
 
 .btn-secondary:hover {
-  background: var(--bg-card);
+  background: var(--bg-primary);
   color: var(--text-primary);
 }
 

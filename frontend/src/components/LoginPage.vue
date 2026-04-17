@@ -13,6 +13,13 @@
           <div ref="cont3" class="lottie-cont"></div>
         </div>
       </div>
+      <div v-if="lottieLoadFailed" class="lottie-fallback">
+        <svg viewBox="0 0 200 80" xmlns="http://www.w3.org/2000/svg" opacity="0.3">
+          <circle cx="40" cy="40" r="30" fill="#4a90d9"/>
+          <circle cx="100" cy="40" r="20" fill="#7c4dcc"/>
+          <circle cx="160" cy="40" r="25" fill="#e8b000"/>
+        </svg>
+      </div>
     </div>
 
     <!-- 右侧表单面板 -->
@@ -21,7 +28,7 @@
         <!-- Logo -->
         <div class="logo-section">
           <div class="logo-icon">
-            <svg viewBox="0 0 64 64" fill="none">
+            <svg width="60" height="60" viewBox="0 0 64 64" fill="none">
               <rect x="14" y="18" width="36" height="28" rx="10" fill="url(#rg)"/>
               <rect x="22" y="26" width="8" height="8" rx="4" fill="white" opacity="0.9"/>
               <rect x="34" y="26" width="8" height="8" rx="4" fill="white" opacity="0.9"/>
@@ -226,7 +233,7 @@ async function handleLogin() {
   } catch (err) {
     const errData = err.response?.data
     showToast(errData?.error || '登录失败，请稍后重试', 'error')
-    if (errData?.refreshCaptcha) loadCaptcha()
+    await loadCaptcha()
     loginForm.value.captchaCode = ''
   } finally {
     loading.value = false
@@ -257,7 +264,7 @@ async function handleRegister() {
   } catch (err) {
     const errData = err.response?.data
     showToast(errData?.error || '注册失败，请稍后重试', 'error')
-    if (errData?.refreshCaptcha) loadCaptcha()
+    await loadCaptcha()
     registerForm.value.captchaCode = ''
   } finally {
     loading.value = false
@@ -272,6 +279,7 @@ const wrap1 = ref(null)
 const wrap2 = ref(null)
 const wrap3 = ref(null)
 const brandPanelRef = ref(null)
+const lottieLoadFailed = ref(false)
 let lottieInsts = []
 
 function initLottie() {
@@ -280,9 +288,11 @@ function initLottie() {
     { cont: cont2.value, path: '/lottie/char2.json' },
     { cont: cont3.value, path: '/lottie/char3.json' },
   ]
-  lottieInsts = chars.map(({ cont, path }) =>
-    lottie.loadAnimation({ container: cont, renderer: 'svg', loop: true, autoplay: true, path })
-  )
+  lottieInsts = chars.map(({ cont, path }) => {
+    const anim = lottie.loadAnimation({ container: cont, renderer: 'svg', loop: true, autoplay: true, path })
+    anim.addEventListener('error', () => { lottieLoadFailed.value = true })
+    return anim
+  })
 }
 
 // ── Mouse tracking ────────────────────────────────────────────────────────────
@@ -333,7 +343,7 @@ onBeforeUnmount(() => {
 /* ── Left brand panel ───────────────────────────────────────────── */
 .brand-panel {
   flex: 1;
-  background: linear-gradient(150deg, #0d1b4b 0%, #1a2f7a 50%, #0a1a3e 100%);
+  background: linear-gradient(135deg, #0d1b4b 0%, #1a2f7a 100%);
   display: flex;
   align-items: flex-end;
   justify-content: center;
@@ -377,9 +387,17 @@ onBeforeUnmount(() => {
   height: 100%;
 }
 
+.lottie-fallback {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
 /* ── Right form panel ───────────────────────────────────────────── */
 .form-panel {
-  width: 440px;
+  width: 420px;
   min-height: 100vh;
   background: #f5f7fa;
   display: flex;
@@ -404,20 +422,20 @@ onBeforeUnmount(() => {
 }
 
 .logo-icon {
-  width: 64px;
-  height: 64px;
+  width: 60px;
+  height: 60px;
   margin: 0 auto 14px;
 }
 
 .logo-icon svg {
-  width: 64px;
-  height: 64px;
+  width: 60px;
+  height: 60px;
 }
 
 .logo-title {
   font-size: 22px;
   font-weight: 700;
-  color: #1e3a8a;
+  color: #1e40af;
   letter-spacing: 0.02em;
   margin: 0 0 4px;
 }
@@ -576,9 +594,9 @@ onBeforeUnmount(() => {
 /* ── Submit button ──────────────────────────────────────────────── */
 .submit-btn {
   height: 46px;
-  background: linear-gradient(135deg, #2563eb 0%, #4f46e5 100%);
+  background: #2563eb;
   border: none;
-  border-radius: 10px;
+  border-radius: 8px;
   color: white;
   font-size: 15px;
   font-weight: 600;

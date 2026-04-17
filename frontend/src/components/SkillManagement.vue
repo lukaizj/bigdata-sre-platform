@@ -50,7 +50,7 @@
     </div>
 
     <!-- Skills 目录信息 -->
-    <div v-if="view === 'skills'" class="dirs-info fade-in-up">
+    <div v-if="view === 'skills'" class="dirs-info">
       <div class="dir-card" v-for="dir in skillDirs" :key="dir.path">
         <div class="dir-status">
           <span :class="['status-dot', { active: dir.available }]"></span>
@@ -75,7 +75,7 @@
         </div>
       </div>
       <div v-if="!skills.length" class="empty">
-        <span>🧠</span>
+        <span></span>
         <p>没有加载的技能，点击同步按钮加载</p>
       </div>
     </div>
@@ -83,7 +83,7 @@
     <!-- MCP -->
     <div v-else class="mcp-box">
       <div class="mcp-intro">
-        <h4>🔗 MCP 工具集成</h4>
+        <h4>MCP 工具集成</h4>
         <p>直接调用 MCP 工具，无需 AI 路由。可自定义添加 MCP 工具配置</p>
       </div>
       <div class="mcp-grid">
@@ -572,9 +572,8 @@ const doImport = async () => {
   }
 }
 
-onMounted(() => {
-  load()
-  loadDirs()
+onMounted(async () => {
+  await Promise.all([load(), loadDirs()])
   loadMCP()
   view.value = props.mode || 'skills'
 })
@@ -586,50 +585,49 @@ onMounted(() => {
 .page-header h3 { font-size: 22px; font-weight: 700; color: var(--text-primary); margin-bottom: 2px; }
 .page-header p { font-size: 14px; color: var(--text-muted); }
 .header-acts { display: flex; gap: 12px; align-items: center; }
-.mode-toggle { display: flex; background: var(--bg-hover); border-radius: 10px; padding: 4px; }
+.mode-toggle { display: flex; background: var(--bg-hover); border-radius: var(--radius-sm); padding: 4px; }
 .mode-toggle button { padding: 8px 16px; border: none; background: none; color: var(--text-muted); cursor: pointer; border-radius: 8px; font-size: 13px; font-weight: 600; }
-.mode-toggle button.active { background: var(--gradient-primary); color: white; }
+.mode-toggle button.active { background: var(--accent); color: white; }
 
 /* Skills 目录信息 */
 .dirs-info { display: flex; gap: 12px; margin-bottom: 16px; flex-wrap: wrap; }
-.dir-card { display: flex; align-items: center; gap: 12px; padding: 12px 16px; background: var(--bg-card); border: var(--border-light); border-radius: 10px; transition: all 0.2s ease; }
+.dir-card { display: flex; align-items: center; gap: 12px; padding: 12px 16px; background: var(--bg-primary); border: var(--border-medium-line); border-radius: var(--radius-sm); transition: all 0.2s ease; }
 .dir-card:hover { border-color: var(--accent); }
 .dir-status { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--text-muted); }
 .dir-path { font-size: 13px; color: var(--text-secondary); font-weight: 500; }
-.dir-count { font-size: 12px; background: rgba(59, 130, 246, 0.15); padding: 4px 8px; border-radius: 6px; color: var(--accent); }
+.dir-count { font-size: 12px; background: var(--tag-blue-bg); padding: 4px 8px; border-radius: var(--radius-sm); color: var(--tag-blue-text); }
 
 .skill-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 16px; }
-.skill-card { display: flex; gap: 16px; padding: 20px; background: var(--bg-card); border: var(--border-light); border-radius: 14px; cursor: pointer; transition: all 0.2s ease; }
-.skill-card:hover { border-color: var(--accent); box-shadow: var(--shadow-glow); }
-.skill-icon { width: 48px; height: 48px; background: var(--bg-hover); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 24px; flex-shrink: 0; }
+.skill-card { display: flex; gap: 16px; padding: 20px; background: var(--bg-primary); border: var(--border-medium-line); border-radius: var(--radius-md); cursor: pointer; transition: all 0.2s ease; }
+.skill-card:hover { border-color: var(--accent); }
+.skill-icon { width: 48px; height: 48px; background: var(--bg-hover); border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0; }
 .skill-info { flex: 1; }
 .skill-info h4 { font-size: 15px; font-weight: 600; color: var(--text-primary); margin-bottom: 4px; }
 .skill-info p { font-size: 13px; color: var(--text-muted); margin-bottom: 8px; line-height: 1.4; }
 .skill-meta { display: flex; gap: 8px; align-items: center; }
-.skill-id { font-size: 11px; color: var(--text-muted); background: rgba(59, 130, 246, 0.08); padding: 2px 6px; border-radius: 4px; }
+.skill-id { font-size: 11px; color: var(--text-muted); background: var(--bg-hover); padding: 2px 6px; border-radius: var(--radius-sm); }
 
-.empty { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 60px; background: var(--bg-card); border: var(--border-light); border-radius: 14px; color: var(--text-muted); }
+.empty { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 60px; background: var(--bg-primary); border: var(--border-medium-line); border-radius: var(--radius-md); color: var(--text-muted); }
 .empty span { font-size: 40px; margin-bottom: 12px; opacity: .5; }
 
-.mcp-box { background: var(--bg-card); border: var(--border-light); border-radius: 14px; padding: 24px; transition: all 0.3s ease; }
-[data-theme="dark"] .mcp-box { backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
+.mcp-box { background: var(--bg-primary); border: var(--border-medium-line); border-radius: var(--radius-md); padding: 24px; transition: all 0.3s ease; }
 .mcp-intro { margin-bottom: 20px; }
 .mcp-intro h4 { font-size: 18px; font-weight: 600; color: var(--text-primary); margin-bottom: 4px; }
 .mcp-intro p { font-size: 14px; color: var(--text-muted); }
 .mcp-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px; }
 .mcp-card { padding: 20px; background: var(--bg-hover); border-radius: 12px; text-align: center; border: 1px solid transparent; }
-.mcp-card.connected { border: 2px solid var(--accent); background: rgba(59, 130, 246, 0.1); }
+.mcp-card.connected { border: 2px solid var(--accent); background: var(--tag-blue-bg); }
 .mcp-status { display: flex; align-items: center; justify-content: center; gap: 6px; font-size: 12px; color: var(--text-muted); margin-bottom: 12px; }
-.mcp-icon { font-size: 32px; margin-bottom: 8px; }
+.mcp-icon { font-size: 16px; margin-bottom: 8px; }
 .mcp-card h4 { font-size: 15px; font-weight: 600; color: var(--text-primary); margin-bottom: 4px; }
 .mcp-card p { font-size: 13px; color: var(--text-muted); margin-bottom: 12px; }
 .mcp-acts { display: flex; gap: 8px; justify-content: center; }
 
 /* 图标选择器 */
 .icon-selector { display: flex; gap: 8px; flex-wrap: wrap; }
-.icon-option { width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; background: rgba(99, 102, 241, 0.05); border: 1px solid rgba(99, 102, 241, 0.15); border-radius: 8px; font-size: 18px; cursor: pointer; transition: all 0.2s ease; }
+.icon-option { width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; background: var(--bg-hover); border: var(--border-medium-line); border-radius: var(--radius-lg); font-size: 18px; cursor: pointer; transition: all 0.2s ease; }
 .icon-option:hover { border-color: var(--accent); }
-.icon-option.active { background: rgba(99, 102, 241, 0.2); border-color: var(--accent); }
+.icon-option.active { background: var(--tag-blue-bg); border-color: var(--accent); }
 
 /* 按钮图标 */
 .btn-icon { width: 14px; height: 14px; margin-right: 4px; }
@@ -642,9 +640,9 @@ onMounted(() => {
 .import-tab {
   flex: 1;
   padding: 12px 16px;
-  border: 1px solid rgba(99, 102, 241, 0.2);
+  border: var(--border-medium-line);
   background: transparent;
-  border-radius: 10px;
+  border-radius: var(--radius-sm);
   cursor: pointer;
   font-size: 14px;
   font-weight: 500;
@@ -658,7 +656,7 @@ onMounted(() => {
 .import-tab svg { width: 16px; height: 16px; }
 .import-tab:hover { border-color: var(--accent); color: var(--text-secondary); }
 .import-tab.active {
-  background: rgba(99, 102, 241, 0.15);
+  background: var(--tag-blue-bg);
   border-color: var(--accent);
   color: var(--accent);
 }
@@ -673,8 +671,8 @@ onMounted(() => {
 .import-preview {
   margin-top: 16px;
   padding: 16px;
-  background: rgba(99, 102, 241, 0.05);
-  border-radius: 10px;
+  background: var(--bg-hover);
+  border-radius: var(--radius-sm);
 }
 .import-preview h5 {
   font-size: 13px;
@@ -686,19 +684,19 @@ onMounted(() => {
   display: flex;
   gap: 12px;
   padding: 12px;
-  background: var(--bg-card);
-  border-radius: 8px;
-  border: 1px solid rgba(99, 102, 241, 0.1);
+  background: var(--bg-primary);
+  border-radius: var(--radius-lg);
+  border: var(--border-weak-line);
 }
 .preview-icon {
   width: 40px;
   height: 40px;
-  background: rgba(99, 102, 241, 0.1);
-  border-radius: 10px;
+  background: var(--bg-hover);
+  border-radius: var(--radius-sm);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 20px;
+  font-size: 16px;
   flex-shrink: 0;
 }
 .preview-info strong {

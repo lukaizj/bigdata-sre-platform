@@ -20,6 +20,20 @@ const CLIENT_ID = process.env.DINGTALK_CLIENT_ID;
 const CLIENT_SECRET = process.env.DINGTALK_CLIENT_SECRET;
 const BACKEND_URL = process.env.BACKEND_URL || 'http://localhost:8080';
 
+// Message deduplication cache (track processed messages)
+const processedMessages = new Map();
+const MESSAGE_CACHE_TTL = 60 * 1000; // 60 seconds
+
+// Clean up expired messages periodically
+setInterval(() => {
+  const now = Date.now();
+  for (const [msgId, timestamp] of processedMessages.entries()) {
+    if (now - timestamp > MESSAGE_CACHE_TTL) {
+      processedMessages.delete(msgId);
+    }
+  }
+}, 30 * 1000);
+
 // Backend API client for message processing
 async function sendMessageToBackend(message) {
   try {
@@ -34,7 +48,7 @@ async function sendMessageToBackend(message) {
     console.log('[Backend] Sending message:', JSON.stringify(payload));
 
     const response = await axios.post(`${BACKEND_URL}/api/dingtalk/chat`, payload, {
-      timeout: 30000,
+      timeout: 90000, // 增加 timeout，支持 GLM-5 reasoning
     });
 
     console.log('[Backend] Response:', JSON.stringify(response.data).slice(0, 200));
@@ -63,64 +77,116 @@ function extractMessageContent(message) {
 }
 
 // Send reply to DingTalk via sessionWebhook (for single chat)
+// Supports multi-message splitting for long content
 async function sendReplyToDingTalk(messageData, content) {
   try {
     if (!content) return;
 
-    // DingTalk message length limit
-    const maxLength = 2000;
-    let replyContent = content;
-    if (content.length > maxLength) {
-      replyContent = content.substring(0, maxLength) + '\n...（消息已截断）';
-    }
-
-    // Use sessionWebhook for single chat reply
     const sessionWebhook = messageData.sessionWebhook;
     const senderStaffId = messageData.senderStaffId;
 
-    if (sessionWebhook) {
-      // Use session webhook to reply (most reliable for single chat)
-      console.log('[DingTalk] Sending reply via sessionWebhook');
+    // DingTalk message length limit per message
+    const maxLength = 2000;
 
-      const response = await axios.post(
-        sessionWebhook,
-        {
-          msgtype: 'text',
-          text: { content: replyContent },
-        },
-        {
-          headers: { 'Content-Type': 'application/json' },
-          timeout: 10000,
-        }
-      );
-
-      console.log('[DingTalk] Reply result:', JSON.stringify(response.data));
-    } else if (senderStaffId) {
-      // Use batchSend API with senderStaffId
-      console.log('[DingTalk] Sending reply via batchSend to staffId:', senderStaffId);
-
-      const accessToken = await client.getAccessToken();
-
-      const response = await axios.post(
-        'https://api.dingtalk.com/v1.0/robot/oToMessages/batchSend',
-        {
-          robotCode: CLIENT_ID,
-          userIds: [senderStaffId],
-          msgKey: 'sampleText',
-          msgParam: JSON.stringify({ content: replyContent }),
-        },
-        {
-          headers: {
-            'Content-Type': 'application/json',
-            'x-acs-dingtalk-access-token': accessToken,
-          },
-          timeout: 10000,
-        }
-      );
-
-      console.log('[DingTalk] Reply result:', JSON.stringify(response.data));
+    // Split content into multiple messages if needed
+    const messages = [];
+    if (content.length <= maxLength) {
+      messages.push(content);
     } else {
-      console.warn('[DingTalk] No way to reply: missing sessionWebhook and senderStaffId');
+      // Split into chunks, trying to break at natural boundaries
+      let remaining = content;
+      let partNum = 1;
+      const totalParts = Math.ceil(content.length / maxLength);
+
+      while (remaining.length > 0) {
+        let chunk;
+        if (remaining.length <= maxLength) {
+          chunk = remaining;
+          remaining = '';
+        } else {
+          // Try to break at newline or space
+          let breakPoint = maxLength;
+          const lastNewline = remaining.lastIndexOf('\n', maxLength);
+          const lastSpace = remaining.lastIndexOf(' ', maxLength);
+
+          if (lastNewline > maxLength * 0.5) {
+            breakPoint = lastNewline + 1;
+          } else if (lastSpace > maxLength * 0.5) {
+            breakPoint = lastSpace + 1;
+          }
+
+          chunk = remaining.substring(0, breakPoint);
+          remaining = remaining.substring(breakPoint);
+        }
+
+        // Add part number indicator for multi-part messages
+        if (totalParts > 1) {
+          messages.push(`【第${partNum}/${totalParts}部分】\n${chunk}`);
+        } else {
+          messages.push(chunk);
+        }
+        partNum++;
+      }
+    }
+
+    console.log(`[DingTalk] Sending ${messages.length} message(s), total length: ${content.length}`);
+
+    // Send each message
+    for (let i = 0; i < messages.length; i++) {
+      const msgContent = messages[i];
+
+      if (sessionWebhook) {
+        console.log(`[DingTalk] Sending message ${i + 1}/${messages.length} via sessionWebhook`);
+
+        const response = await axios.post(
+          sessionWebhook,
+          {
+            msgtype: 'text',
+            text: { content: msgContent },
+          },
+          {
+            headers: { 'Content-Type': 'application/json' },
+            timeout: 10000,
+          }
+        );
+
+        console.log('[DingTalk] Reply result:', JSON.stringify(response.data));
+
+        // Small delay between messages to avoid rate limiting
+        if (i < messages.length - 1) {
+          await new Promise(resolve => setTimeout(resolve, 500));
+        }
+      } else if (senderStaffId) {
+        console.log(`[DingTalk] Sending message ${i + 1}/${messages.length} via batchSend`);
+
+        const accessToken = await client.getAccessToken();
+
+        const response = await axios.post(
+          'https://api.dingtalk.com/v1.0/robot/oToMessages/batchSend',
+          {
+            robotCode: CLIENT_ID,
+            userIds: [senderStaffId],
+            msgKey: 'sampleText',
+            msgParam: JSON.stringify({ content: msgContent }),
+          },
+          {
+            headers: {
+              'Content-Type': 'application/json',
+              'x-acs-dingtalk-access-token': accessToken,
+            },
+            timeout: 10000,
+          }
+        );
+
+        console.log('[DingTalk] Reply result:', JSON.stringify(response.data));
+
+        if (i < messages.length - 1) {
+          await new Promise(resolve => setTimeout(resolve, 500));
+        }
+      } else {
+        console.warn('[DingTalk] No way to reply: missing sessionWebhook and senderStaffId');
+        break;
+      }
     }
   } catch (error) {
     console.error('[DingTalk] Failed to send reply:', error.response?.data || error.message);
@@ -158,7 +224,7 @@ async function main() {
     console.log('[Robot] Received message:', JSON.stringify(message.headers));
 
     try {
-      // Parse message data
+      // Parse message data first to get msgId
       let data = message.data;
       if (typeof data === 'string') {
         try {
@@ -169,7 +235,18 @@ async function main() {
         }
       }
 
+      // Check for duplicate messages using msgId (钉钉重试时 messageId 会变，但 msgId 不变)
+      const msgId = data.msgId;
+      if (msgId) {
+        if (processedMessages.has(msgId)) {
+          console.log('[Robot] Duplicate message detected (msgId), skipping:', msgId);
+          return; // 直接返回，不触发任何后续处理
+        }
+        processedMessages.set(msgId, Date.now());
+      }
+
       console.log('[Robot] Message data:', JSON.stringify({
+        msgId: data.msgId,
         conversationId: data.conversationId,
         senderNick: data.senderNick,
         senderId: data.senderId,
@@ -177,12 +254,19 @@ async function main() {
         text: data.text?.content?.slice(0, 50),
       }));
 
-      // Send to backend for processing
-      const result = await sendMessageToBackend(data);
+      // 先发送"正在处理"回复，避免钉钉超时重试
+      await sendReplyToDingTalk(data, '⏳ 正在查询，请稍候...');
 
-      // Send reply if we got a response
-      if (result && result.response) {
-        await sendReplyToDingTalk(data, result.response);
+      // 同步等待处理完成，发送最终结果
+      try {
+        const result = await sendMessageToBackend(data);
+        if (result && result.response) {
+          console.log('[Backend] Got response, length:', result.response.length);
+          await sendReplyToDingTalk(data, result.response);
+        }
+      } catch (err) {
+        console.error('[Robot] Backend error:', err);
+        await sendReplyToDingTalk(data, '❌ 处理失败：' + err.message);
       }
     } catch (error) {
       console.error('[Robot] Error processing message:', error);

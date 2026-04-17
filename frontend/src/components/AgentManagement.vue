@@ -5,12 +5,12 @@
         <h3>智能体管理</h3>
         <p>创建和配置 AI 智能体</p>
       </div>
-      <el-button type="primary" @click="showCreate">✨ 创建智能体</el-button>
+      <el-button type="primary" @click="showCreate">创建智能体</el-button>
     </div>
 
     <div class="agent-list">
       <div v-for="a in agents" :key="a.id" class="agent-card">
-        <div class="agent-avatar">🤖</div>
+        <div class="agent-avatar">AI</div>
         <div class="agent-info">
           <h4>{{ a.name }}</h4>
           <p>{{ a.description || '暂无描述' }}</p>
@@ -25,7 +25,6 @@
         </div>
       </div>
       <div v-if="!agents.length" class="empty">
-        <span>🤖</span>
         <p>还没有智能体</p>
       </div>
     </div>
@@ -118,15 +117,13 @@ onMounted(() => load())
 .page-header h3 { font-size: 22px; font-weight: 700; color: var(--text-primary); margin-bottom: 2px; }
 .page-header p { font-size: 14px; color: var(--text-muted); }
 .agent-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(360px, 1fr)); gap: 16px; }
-.agent-card { display: flex; gap: 16px; padding: 20px; background: var(--bg-card); border: var(--border-light); border-radius: 14px; transition: all 0.2s ease; }
-.agent-card:hover { border-color: var(--accent); box-shadow: var(--shadow-glow); }
-.agent-card:hover { border-color: var(--accent); }
-.agent-avatar { width: 48px; height: 48px; background: var(--gradient-primary); border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 24px; color: white; flex-shrink: 0; }
+.agent-card { display: flex; gap: 16px; padding: 20px; background: var(--bg-primary); border: var(--glass-border); border-radius: var(--radius-md); transition: all 0.25s ease; backdrop-filter: blur(var(--glass-blur)); -webkit-backdrop-filter: blur(var(--glass-blur)); box-shadow: var(--shadow-sm); }
+.agent-card:hover { border-color: var(--accent); transform: translateY(-2px); box-shadow: var(--shadow-md); }
+.agent-avatar { width: 48px; height: 48px; background: var(--accent-gradient); border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center; font-size: 16px; color: white; flex-shrink: 0; box-shadow: 0 2px 8px var(--accent-glow); }
 .agent-info { flex: 1; min-width: 0; }
 .agent-info h4 { font-size: 16px; font-weight: 600; color: var(--text-primary); margin-bottom: 2px; }
 .agent-info p { font-size: 13px; color: var(--text-muted); margin-bottom: 10px; }
 .agent-skills { display: flex; gap: 6px; flex-wrap: wrap; }
 .agent-acts { display: flex; flex-direction: column; gap: 6px; }
-.empty { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 60px; background: var(--bg-card); border: var(--border-light); border-radius: 14px; color: var(--text-muted); }
-.empty span { font-size: 40px; margin-bottom: 12px; opacity: .5; }
+.empty { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 60px; background: var(--bg-primary); border: var(--border-medium-line); border-radius: var(--radius-md); color: var(--text-muted); }
 </style>

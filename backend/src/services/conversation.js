@@ -13,6 +13,7 @@ const { getModels, getSparkHistoryUrl } = require('../routes/settings');
 const conversations = new Map();
 const SESSION_EXPIRE_MS = 30 * 60 * 1000;
 const MAX_HISTORY_LENGTH = 20;
+const MAX_TOOL_RESULT_LENGTH = 4000;
 
 // 定期清理过期会话
 setInterval(() => {
@@ -46,16 +47,36 @@ function getHistory(sessionId) {
 
 /**
  * 清理历史，保持在限制范围内
+ * 确保不会在 tool_calls/tool 序列中间截断
  */
 function trimHistory(history) {
   if (history.length <= MAX_HISTORY_LENGTH) {
     return history;
   }
-  // 保留系统消息 + 最近的对话
-  const systemMessages = history.filter(m => m.role === 'system');
-  const conversationMessages = history.filter(m => m.role !== 'system');
-  const recentMessages = conversationMessages.slice(-MAX_HISTORY_LENGTH + systemMessages.length);
-  return [...systemMessages, ...recentMessages];
+  // 单次遍历分离 system 和 conversation 消息
+  const systemMessages = [];
+  const conversationMessages = [];
+  for (const msg of history) {
+    if (msg.role === 'system') {
+      systemMessages.push(msg);
+    } else {
+      conversationMessages.push(msg);
+    }
+  }
+  let startIdx = conversationMessages.length - (MAX_HISTORY_LENGTH - systemMessages.length);
+  if (startIdx < 0) startIdx = 0;
+
+  // 确保不从 tool 消息或带 tool_calls 的 assistant 消息中间截断
+  while (startIdx < conversationMessages.length) {
+    const msg = conversationMessages[startIdx];
+    if (msg.role === 'tool' || (msg.role === 'assistant' && msg.tool_calls)) {
+      startIdx++;
+    } else {
+      break;
+    }
+  }
+
+  return [...systemMessages, ...conversationMessages.slice(startIdx)];
 }
 
 /**
@@ -86,7 +107,7 @@ async function callAIWithTools(messages, tools, modelConfig) {
       if (m.role === 'assistant' && m.tool_calls) {
         return {
           role: 'assistant',
-          content: m.content || '',
+          content: m.content || null,
           tool_calls: m.tool_calls
         };
       }
@@ -99,19 +120,34 @@ async function callAIWithTools(messages, tools, modelConfig) {
     tool_choice: 'auto'
   };
 
+  const requestBodyStr = JSON.stringify(requestBody);
   console.log('[AI] Calling with tools:', JSON.stringify({
     model: modelName,
     messagesCount: messages.length,
-    toolsCount: tools.length
+    toolsCount: tools.length,
+    requestBodySize: requestBodyStr.length
   }));
 
-  const response = await axios.post(apiUrl, requestBody, {
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${apiKey}`
-    },
-    timeout: 60000
-  });
+  let response;
+  try {
+    response = await axios.post(apiUrl, requestBody, {
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${apiKey}`
+      },
+      timeout: 60000
+    });
+  } catch (err) {
+    // 记录 AI API 返回的详细错误信息
+    if (err.response) {
+      console.error('[AI] API error:', JSON.stringify({
+        status: err.response.status,
+        data: err.response.data,
+        requestBodySize: requestBodyStr.length
+      }));
+    }
+    throw err;
+  }
 
   const choice = response.data.choices[0];
 
@@ -247,11 +283,34 @@ async function processMessage(sessionId, userMessage, agentId, modelId) {
         steps[stepIndex].content = toolResult.summary || '执行完成';
       }
 
-      // 添加工具结果到历史
+      // 添加工具结果到历史（截断过大的内容避免超出 AI token 限制）
+      const originalStr = JSON.stringify(toolResult);
+      let toolContent = originalStr;
+      if (originalStr.length > MAX_TOOL_RESULT_LENGTH) {
+        // 构建截断对象，只 stringify 一次
+        const truncated = {
+          summary: toolResult.summary || '执行完成',
+          _truncated: true,
+          _originalSize: originalStr.length
+        };
+        // 如果有 data 且大小可控，尝试保留
+        if (toolResult.data !== undefined) {
+          truncated.data = toolResult.data;
+        }
+        const truncatedStr = JSON.stringify(truncated);
+        // 如果带 data 还是太大，去掉 data 只保留 summary
+        toolContent = truncatedStr.length <= MAX_TOOL_RESULT_LENGTH
+          ? truncatedStr
+          : JSON.stringify({
+              summary: toolResult.summary || '执行完成',
+              _truncated: true,
+              _originalSize: originalStr.length
+            });
+      }
       history.push({
         role: 'tool',
         tool_call_id: toolCall.id,
-        content: JSON.stringify(toolResult)
+        content: toolContent
       });
     }
 

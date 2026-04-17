@@ -157,9 +157,21 @@ async function processDingtalkMessage(message) {
   try {
     const { response, data, steps } = await handleChat(session.currentAgentId, content);
 
+    // 只返回结果，不显示执行步骤
+    let finalResponse;
+    if (response && response !== JSON.stringify(data, null, 2)) {
+      // AI 已生成解读，直接使用
+      finalResponse = response;
+    } else if (data) {
+      // 显示原始数据结果
+      finalResponse = JSON.stringify(data, null, 2);
+    } else {
+      finalResponse = response || '查询完成，无数据返回';
+    }
+
     return {
       success: true,
-      response,
+      response: finalResponse,
       agentId: session.currentAgentId,
       data,
       steps,

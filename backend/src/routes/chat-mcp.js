@@ -6,6 +6,7 @@ const Skill = require('../models/skill');
 const { identifySkills, generateResponse } = require('../services/glm');
 const { executeMCP, parseMCPIntent } = require('../services/mcp');
 const { getClusterConfig, getModels, getSparkHistoryUrl } = require('./settings');
+const { formatBytes } = require('../utils/format');
 const config = require('../config');
 const path = require('path');
 const fs = require('fs');
@@ -438,14 +439,6 @@ function generateSparkAnalysis(data, message) {
   return report;
 }
 
-// 格式化字节
-function formatBytes(bytes) {
-  if (!bytes || bytes === 0) return '0 B';
-  const units = ['B', 'KB', 'MB', 'GB', 'TB'];
-  const i = Math.floor(Math.log(bytes) / Math.log(1024));
-  return (bytes / Math.pow(1024, i)).toFixed(2) + ' ' + units[i];
-}
-
 // 执行 Shell 技能
 async function executeShellSkill(skillDir, message, skillConfig) {
   const binDir = path.join(skillDir, 'bin');
@@ -686,8 +679,7 @@ async function handleSkillsChat(agentId, message, preferredSkillIds) {
     status: 'running'
   });
 
-  const allSkills = await Skill.getAll();
-  const agentSkills = allSkills.filter(s => agent.skills.includes(s.id));
+  const agentSkills = await Skill.getByIds(agent.skills);
 
   if (agentSkills.length === 0) {
     return {

@@ -1,7 +1,7 @@
 <template>
   <div class="guide-container">
     <!-- 欢迎区域 -->
-    <div class="welcome-section glass-card fade-in-up">
+    <div class="welcome-section card">
       <div class="welcome-content">
         <div class="welcome-icon">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
@@ -18,7 +18,7 @@
     </div>
 
     <!-- 快速开始 -->
-    <div class="section glass-card fade-in-up delay-1">
+    <div class="section card">
       <div class="section-header">
         <svg class="section-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
@@ -48,7 +48,7 @@
     </div>
 
     <!-- 功能介绍 -->
-    <div class="section glass-card fade-in-up delay-2">
+    <div class="section card">
       <div class="section-header">
         <svg class="section-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
@@ -128,7 +128,7 @@
     </div>
 
     <!-- 支持的查询 -->
-    <div class="section glass-card fade-in-up delay-3">
+    <div class="section card">
       <div class="section-header">
         <svg class="section-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <circle cx="11" cy="11" r="8"></circle>
@@ -205,7 +205,7 @@
     </div>
 
     <!-- 快捷指令 -->
-    <div class="section glass-card fade-in-up delay-4">
+    <div class="section card">
       <div class="section-header">
         <svg class="section-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <rect x="2" y="4" width="20" height="16" rx="2"></rect>
@@ -234,7 +234,7 @@
     </div>
 
     <!-- FAQ -->
-    <div class="section glass-card fade-in-up delay-5">
+    <div class="section card">
       <div class="section-header">
         <svg class="section-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <circle cx="12" cy="12" r="10"></circle>
@@ -285,7 +285,7 @@
     </div>
 
     <!-- 版本信息 -->
-    <div class="version-info fade-in-up delay-5">
+    <div class="version-info">
       <p>大数据运维 Agent v1.0.0</p>
       <p>Powered by AI</p>
     </div>
@@ -320,12 +320,11 @@ const expandedFaq = ref(0)
 .welcome-icon {
   width: 72px;
   height: 72px;
-  background: var(--gradient-primary);
-  border-radius: 20px;
+  background: var(--accent);
+  border-radius: 6px;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 8px 24px rgba(59, 130, 246, 0.3);
 }
 .welcome-icon svg {
   width: 40px;
@@ -378,9 +377,9 @@ const expandedFaq = ref(0)
 }
 
 .step-card {
-  background: rgba(59, 130, 246, 0.05);
-  border: 1px solid rgba(59, 130, 246, 0.15);
-  border-radius: 16px;
+  background: var(--bg-hover);
+  border: var(--border-medium-line);
+  border-radius: var(--radius-lg);
   padding: 24px;
   text-align: center;
 }
@@ -388,8 +387,8 @@ const expandedFaq = ref(0)
 .step-number {
   width: 40px;
   height: 40px;
-  background: var(--gradient-primary);
-  border-radius: 50%;
+  background: var(--accent);
+  border-radius: var(--radius-sm);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -397,7 +396,6 @@ const expandedFaq = ref(0)
   font-weight: 700;
   font-size: 18px;
   margin: 0 auto 16px;
-  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
 }
 
 .step-card h4 {
@@ -423,14 +421,13 @@ const expandedFaq = ref(0)
 
 .feature-card {
   background: var(--bg-hover);
-  border: 1px solid rgba(99, 102, 241, 0.1);
-  border-radius: 14px;
+  border: var(--border-medium-line);
+  border-radius: var(--radius-md);
   padding: 20px;
   transition: all 0.2s ease;
 }
 .feature-card:hover {
   border-color: var(--accent);
-  transform: translateY(-2px);
 }
 
 .feature-icon {
@@ -447,19 +444,12 @@ const expandedFaq = ref(0)
   height: 24px;
 }
 
-/* 不同功能不同颜色 */
-.feature-card:nth-child(1) .feature-icon { background: rgba(99, 102, 241, 0.15); }
-.feature-card:nth-child(1) .feature-icon svg { color: var(--accent); }
-.feature-card:nth-child(2) .feature-icon { background: rgba(139, 92, 246, 0.15); }
-.feature-card:nth-child(2) .feature-icon svg { color: var(--purple); }
-.feature-card:nth-child(3) .feature-icon { background: rgba(6, 182, 212, 0.15); }
-.feature-card:nth-child(3) .feature-icon svg { color: var(--info); }
-.feature-card:nth-child(4) .feature-icon { background: rgba(245, 158, 11, 0.15); }
-.feature-card:nth-child(4) .feature-icon svg { color: var(--warning); }
-.feature-card:nth-child(5) .feature-icon { background: rgba(16, 185, 129, 0.15); }
-.feature-card:nth-child(5) .feature-icon svg { color: var(--success); }
-.feature-card:nth-child(6) .feature-icon { background: rgba(239, 68, 68, 0.15); }
-.feature-card:nth-child(6) .feature-icon svg { color: var(--danger); }
+.feature-icon {
+  background: var(--bg-hover);
+}
+.feature-icon svg {
+  color: var(--accent);
+}
 
 .feature-card h4 {
   font-size: 15px;
@@ -484,9 +474,9 @@ const expandedFaq = ref(0)
 .example-tag {
   font-size: 11px;
   padding: 4px 8px;
-  background: rgba(59, 130, 246, 0.15);
-  border-radius: 6px;
-  color: var(--accent);
+  background: var(--tag-blue-bg);
+  border-radius: var(--radius-sm);
+  color: var(--tag-blue-text);
 }
 
 /* 查询类型 */
@@ -498,8 +488,8 @@ const expandedFaq = ref(0)
 
 .query-type {
   background: var(--bg-hover);
-  border: 1px solid rgba(99, 102, 241, 0.1);
-  border-radius: 14px;
+  border: var(--border-medium-line);
+  border-radius: var(--radius-md);
   padding: 20px;
   transition: all 0.2s ease;
 }
@@ -507,11 +497,7 @@ const expandedFaq = ref(0)
   border-color: var(--accent);
 }
 
-/* 不同查询类型不同边框颜色 */
-.query-type:nth-child(1) { border-left: 3px solid #f97316; }
-.query-type:nth-child(2) { border-left: 3px solid #8b5cf6; }
-.query-type:nth-child(3) { border-left: 3px solid #06b6d4; }
-.query-type:nth-child(4) { border-left: 3px solid #10b981; }
+.query-type { border-left: 3px solid var(--accent); }
 
 .type-header {
   display: flex;
@@ -519,17 +505,14 @@ const expandedFaq = ref(0)
   gap: 10px;
   margin-bottom: 16px;
   padding-bottom: 12px;
-  border-bottom: var(--border-light);
+  border-bottom: var(--border-weak-line);
 }
 
 .type-icon {
   width: 24px;
   height: 24px;
 }
-.query-type:nth-child(1) .type-icon { color: #f97316; }
-.query-type:nth-child(2) .type-icon { color: #8b5cf6; }
-.query-type:nth-child(3) .type-icon { color: #06b6d4; }
-.query-type:nth-child(4) .type-icon { color: #10b981; }
+.type-icon { color: var(--accent); }
 
 .type-name {
   font-size: 16px;
@@ -560,7 +543,7 @@ const expandedFaq = ref(0)
 /* 快捷指令 */
 .shortcuts-table {
   background: var(--bg-hover);
-  border-radius: 12px;
+  border-radius: var(--radius-md);
   overflow: hidden;
 }
 
@@ -568,7 +551,7 @@ const expandedFaq = ref(0)
   display: flex;
   align-items: center;
   padding: 12px 16px;
-  border-bottom: 1px solid rgba(59, 130, 246, 0.08);
+  border-bottom: var(--border-weak-line);
 }
 
 .shortcut-row:last-child {
@@ -576,7 +559,7 @@ const expandedFaq = ref(0)
 }
 
 .shortcut-row.header {
-  background: rgba(59, 130, 246, 0.05);
+  background: var(--bg-hover);
   font-weight: 600;
   color: var(--text-secondary);
   font-size: 13px;
@@ -588,12 +571,12 @@ const expandedFaq = ref(0)
 }
 
 .shortcut-key kbd {
-  background: rgba(59, 130, 246, 0.15);
+  background: var(--tag-blue-bg);
   padding: 4px 10px;
-  border-radius: 6px;
-  font-family: monospace;
+  border-radius: var(--radius-sm);
+  font-family: var(--font-mono);
   font-size: 13px;
-  color: var(--accent);
+  color: var(--tag-blue-text);
 }
 
 .shortcut-desc {
@@ -610,19 +593,19 @@ const expandedFaq = ref(0)
 
 .faq-item {
   background: var(--bg-hover);
-  border: 1px solid rgba(59, 130, 246, 0.1);
-  border-radius: 12px;
+  border: var(--border-medium-line);
+  border-radius: var(--radius-md);
   cursor: pointer;
   transition: all 0.2s ease;
 }
 
 .faq-item:hover {
-  border-color: rgba(34, 197, 94, 0.2);
+  border-color: var(--accent);
 }
 
 .faq-item.expanded {
-  border-color: rgba(59, 130, 246, 0.3);
-  background: rgba(59, 130, 246, 0.05);
+  border-color: var(--accent);
+  background: var(--bg-hover);
 }
 
 .faq-question {
@@ -637,13 +620,13 @@ const expandedFaq = ref(0)
 .faq-toggle {
   width: 24px;
   height: 24px;
-  background: rgba(59, 130, 246, 0.15);
-  border-radius: 6px;
+  background: var(--tag-blue-bg);
+  border-radius: var(--radius-sm);
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 18px;
-  color: var(--accent);
+  color: var(--tag-blue-text);
 }
 
 .faq-answer {

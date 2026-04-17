@@ -24,14 +24,50 @@
         </div>
 
         <nav class="nav-menu">
+          <div class="nav-group-label">工作区</div>
           <div
-            v-for="item in visibleMenuItems"
+            v-for="item in workspaceItems"
             :key="item.key"
             :class="['nav-item', { active: activeMenu === item.key }]"
             @click="activeMenu = item.key"
           >
             <div class="nav-icon" v-html="item.icon"></div>
             <span class="nav-label">{{ item.label }}</span>
+          </div>
+
+          <template v-if="user?.role === ROLE.ADMIN || (normalizedPermissions && normalizedPermissions.includes('dashboard'))">
+            <div class="nav-group-label">监控</div>
+            <div
+              v-for="item in monitorItems"
+              :key="item.key"
+              :class="['nav-item', { active: activeMenu === item.key }]"
+              @click="activeMenu = item.key"
+            >
+              <div class="nav-icon" v-html="item.icon"></div>
+              <span class="nav-label">{{ item.label }}</span>
+            </div>
+          </template>
+
+          <template v-if="user?.role === ROLE.ADMIN">
+            <div class="nav-group-label">管理</div>
+            <div
+              v-for="item in adminItems"
+              :key="item.key"
+              :class="['nav-item', { active: activeMenu === item.key }]"
+              @click="activeMenu = item.key"
+            >
+              <div class="nav-icon" v-html="item.icon"></div>
+              <span class="nav-label">{{ item.label }}</span>
+            </div>
+          </template>
+
+          <div class="nav-group-label">帮助</div>
+          <div
+            :class="['nav-item', { active: activeMenu === 'guide' }]"
+            @click="activeMenu = 'guide'"
+          >
+            <div class="nav-icon" v-html="guideIcon"></div>
+            <span class="nav-label">使用说明</span>
           </div>
         </nav>
 
@@ -139,7 +175,6 @@ const activeMenu = ref(localStorage.getItem(STORAGE_KEYS.ACTIVE_MENU) || 'chat')
 const theme = ref('light')
 
 const menuItems = [
-  { key: 'guide', label: '使用说明', icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path></svg>' },
   { key: 'chat', label: '智能对话', icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>' },
   { key: 'dashboard', label: '集群仪表板', icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"></rect><path d="M3 9h18M9 21V9"></path></svg>' },
   { key: 'agents', label: '智能体管理', icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle></svg>' },
@@ -149,25 +184,42 @@ const menuItems = [
   { key: 'users', label: '用户管理', icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>' },
 ]
 
-const currentPageTitle = computed(() => {
-  const item = menuItems.find(i => i.key === activeMenu.value)
-  return item ? item.label : ''
-})
+const guideIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path></svg>'
 
-const visibleMenuItems = computed(() => {
-  // 管理员显示所有菜单
-  if (user.value?.role === ROLE.ADMIN) {
-    return menuItems
-  }
-
-  // 获取用户权限，如果没有配置则使用默认权限
+// Normalized permissions - deduplicated normalization logic
+const normalizedPermissions = computed(() => {
   let permissions = user.value?.permissions
   if (!permissions || !Array.isArray(permissions) || permissions.length === 0) {
     permissions = DEFAULT_USER_PERMISSIONS
   }
+  return permissions
+})
 
-  // 根据权限过滤菜单
-  return menuItems.filter(item => permissions.includes(item.key))
+// Nav groups - workspace items always visible
+const workspaceItems = computed(() => {
+  if (user.value?.role === ROLE.ADMIN) {
+    return [menuItems[0], menuItems[2], menuItems[3]]  // chat, agents, skills
+  }
+  return menuItems.filter(i => normalizedPermissions.value.includes(i.key) && ['chat', 'agents', 'skills'].includes(i.key))
+})
+
+// Monitor items - dashboard + dingtalk + config
+const monitorItems = computed(() => {
+  if (user.value?.role === ROLE.ADMIN) {
+    return [menuItems[1], menuItems[4], menuItems[5]]  // dashboard, dingtalk, config
+  }
+  return menuItems.filter(i => normalizedPermissions.value.includes(i.key) && ['dashboard', 'dingtalk', 'config'].includes(i.key))
+})
+
+// Admin items - users only
+const adminItems = computed(() => {
+  return [menuItems[6]]  // users
+})
+
+const currentPageTitle = computed(() => {
+  const item = menuItems.find(i => i.key === activeMenu.value)
+  if (activeMenu.value === 'guide') return '使用说明'
+  return item ? item.label : ''
 })
 
 const handleSetTheme = (newTheme) => {
@@ -175,9 +227,15 @@ const handleSetTheme = (newTheme) => {
   setTheme(newTheme)
 }
 
-// 保存当前页面到 localStorage
+// 保存当前页面到 localStorage，并同步更新标签页标题
 watch(activeMenu, (newVal) => {
   localStorage.setItem(STORAGE_KEYS.ACTIVE_MENU, newVal)
+  document.title = `${currentPageTitle.value} · Big Data SRE`
+})
+
+// 登录后初始化标题
+watch(isLoggedIn, (val) => {
+  if (val) document.title = `${currentPageTitle.value} · Big Data SRE`
 })
 
 const handleLoginSuccess = (userData) => {
@@ -235,43 +293,50 @@ onMounted(() => {
   gap: 0;
 }
 
-/* ========== 侧边栏 ========== */
+/* ========== 侧边栏 - Dark brand sidebar ========== */
 .sidebar {
-  width: 220px !important;
-  background: var(--bg-glass) !important;
-  border: none;
-  border-right: var(--border-glass);
-  padding: 20px 12px;
+  width: 240px !important;
+  background: var(--sidebar-bg) !important;
+  padding: 0;
   display: flex;
   flex-direction: column;
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  position: relative;
+  overflow: hidden;
 }
 
-[data-theme="dark"] .sidebar {
-  background: rgba(24, 24, 27, 0.85) !important;
-  border-right: 1px solid rgba(255, 255, 255, 0.08);
+/* Sidebar ambient glow */
+.sidebar::before {
+  content: '';
+  position: absolute;
+  top: -40%;
+  left: -20%;
+  width: 140%;
+  height: 60%;
+  background: radial-gradient(ellipse, rgba(14, 165, 233, 0.12) 0%, transparent 70%);
+  pointer-events: none;
 }
 
 .logo-section {
-  padding: 0 8px 20px;
+  padding: 20px 16px 16px;
   display: flex;
   align-items: center;
-  gap: 10px;
-  border-bottom: var(--border-light);
-  margin-bottom: 16px;
+  gap: 12px;
+  border-bottom: 1px solid var(--sidebar-border);
+  margin-bottom: 4px;
+  position: relative;
 }
 
 .logo-icon {
   width: 36px;
   height: 36px;
-  background: var(--gradient-primary);
-  border-radius: 10px;
+  background: var(--accent-gradient);
+  border-radius: var(--radius-md);
   display: flex;
   align-items: center;
   justify-content: center;
   color: white;
   flex-shrink: 0;
+  box-shadow: 0 2px 8px rgba(14, 165, 233, 0.3);
 }
 .logo-icon svg {
   width: 20px;
@@ -280,56 +345,78 @@ onMounted(() => {
 
 .logo-text h1 {
   font-size: 14px;
-  font-weight: 600;
-  color: var(--text-primary);
+  font-weight: 700;
+  color: var(--sidebar-text);
   letter-spacing: -0.01em;
 }
 
 .logo-text span {
-  font-size: 11px;
-  color: var(--text-muted);
+  font-size: 10px;
+  color: var(--sidebar-text-muted);
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
 }
 
 /* 导航菜单 */
 .nav-menu {
   flex: 1;
   overflow-y: auto;
+  padding: 4px 10px;
+}
+
+.nav-group-label {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--sidebar-text-muted);
+  padding: 18px 12px 6px;
 }
 
 .nav-item {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 10px 12px;
-  border-radius: 8px;
+  padding: 8px 12px;
+  border-radius: var(--radius-sm);
   cursor: pointer;
   margin-bottom: 2px;
-  color: var(--text-muted);
-  transition: all 0.2s ease;
+  color: var(--sidebar-text-muted);
+  transition: all 0.15s ease;
+  position: relative;
 }
 
 .nav-item:hover {
-  background: var(--bg-hover);
-  color: var(--text-primary);
+  background: var(--sidebar-hover);
+  color: var(--sidebar-text);
 }
 
 .nav-item.active {
-  background: rgba(99, 102, 241, 0.15);
-  color: var(--accent);
+  background: var(--sidebar-active);
+  color: white;
 }
 
-[data-theme="dark"] .nav-item.active {
-  background: rgba(129, 140, 248, 0.2);
-}
-
-[data-theme="dark"] .nav-item:hover {
-  background: rgba(63, 63, 70, 0.5);
+.nav-item.active::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 3px;
+  height: 60%;
+  background: var(--accent-gradient);
+  border-radius: 0 2px 2px 0;
 }
 
 .nav-icon {
   width: 18px;
   height: 18px;
   flex-shrink: 0;
+  opacity: 0.7;
+}
+
+.nav-item.active .nav-icon {
+  opacity: 1;
 }
 
 .nav-label {
@@ -339,33 +426,32 @@ onMounted(() => {
 
 /* 侧边栏底部 */
 .sidebar-footer {
-  padding-top: 12px;
-  border-top: var(--border-light);
+  padding: 12px 10px 16px;
+  border-top: 1px solid var(--sidebar-border);
 }
 
 .status-badge {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 10px 12px;
-  background: var(--bg-hover);
-  border-radius: 8px;
+  gap: 6px;
+  padding: 8px 12px;
+  border-radius: var(--radius-sm);
   font-size: 12px;
-  color: var(--text-secondary);
+  color: var(--sidebar-text-muted);
 }
 
-/* 用户头像基础样式 */
+/* 用户头像 */
 .user-avatar {
   width: 28px;
   height: 28px;
-  background: var(--gradient-primary);
-  border-radius: 8px;
+  background: var(--accent-gradient);
+  border-radius: var(--radius-sm);
   display: flex;
   align-items: center;
   justify-content: center;
   color: white;
   font-weight: 600;
-  font-size: 12px;
+  font-size: 11px;
 }
 
 /* ========== 内容区 ========== */
@@ -381,22 +467,17 @@ onMounted(() => {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 12px 24px;
-  height: 52px;
-  background: var(--bg-glass);
-  border-bottom: var(--border-glass);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-}
-
-[data-theme="dark"] .top-header {
-  background: rgba(24, 24, 27, 0.85) !important;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 12px 28px;
+  height: 56px;
+  background: var(--bg-primary);
+  border-bottom: var(--border-weak-line);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
 }
 
 .header-left h2 {
   font-size: 16px;
-  font-weight: 600;
+  font-weight: 700;
   color: var(--text-primary);
   letter-spacing: -0.01em;
 }
@@ -407,19 +488,18 @@ onMounted(() => {
   gap: 12px;
 }
 
-/* 主题切换 */
 .header-theme-toggle {
   display: flex;
   background: var(--bg-hover);
-  border-radius: 8px;
+  border-radius: var(--radius-sm);
   padding: 3px;
 }
 
 .header-theme-toggle .theme-btn {
-  padding: 5px 7px;
+  padding: 5px 8px;
   border: none;
   background: transparent;
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   cursor: pointer;
   transition: all 0.2s ease;
   opacity: 0.4;
@@ -428,135 +508,70 @@ onMounted(() => {
   justify-content: center;
 }
 
-.header-theme-toggle .theme-btn svg {
-  width: 14px;
-  height: 14px;
-  color: var(--text-secondary);
-}
+.header-theme-toggle .theme-btn svg { width: 14px; height: 14px; color: var(--text-secondary); }
+.header-theme-toggle .theme-btn.active svg { color: white; }
+.header-theme-toggle .theme-btn:hover { opacity: 0.7; }
+.header-theme-toggle .theme-btn.active { background: var(--accent-gradient); opacity: 1; box-shadow: 0 1px 4px var(--accent-glow); }
 
-.header-theme-toggle .theme-btn.active svg {
-  color: white;
-}
-
-.header-theme-toggle .theme-btn:hover {
-  opacity: 0.7;
-}
-
-.header-theme-toggle .theme-btn.active {
-  background: var(--gradient-primary);
-  opacity: 1;
-}
-
-/* 用户信息 */
 .header-user {
   display: flex;
   align-items: center;
   gap: 8px;
   cursor: pointer;
   position: relative;
-  padding: 4px 8px 4px 4px;
-  border-radius: 8px;
-  transition: background 0.2s ease;
+  padding: 4px 10px 4px 4px;
+  border-radius: var(--radius-sm);
+  transition: background 0.15s;
 }
-
-.header-user:hover {
-  background: var(--bg-hover);
-}
-
-.header-user .user-avatar {
-  width: 24px;
-  height: 24px;
-  border-radius: 6px;
-  font-size: 10px;
-}
-
-.header-user .user-name {
-  font-size: 12px;
-  font-weight: 500;
-  color: var(--text-primary);
-}
+.header-user:hover { background: var(--bg-hover); }
+.header-user .user-avatar { width: 26px; height: 26px; border-radius: var(--radius-sm); font-size: 10px; }
+.header-user .user-name { font-size: 13px; font-weight: 500; color: var(--text-primary); }
 
 .header-user .user-dropdown {
   position: absolute;
   top: calc(100% + 8px);
   right: 0;
-  min-width: 140px;
-  background: var(--bg-card);
-  border: var(--border-light);
-  border-radius: 10px;
-  padding: 6px;
+  min-width: 150px;
+  background: var(--bg-secondary);
+  border: var(--glass-border);
+  border-radius: var(--radius-md);
+  padding: 4px;
   box-shadow: var(--shadow-lg);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
   z-index: 100;
 }
-
-[data-theme="dark"] .header-user .user-dropdown {
-  backdrop-filter: blur(20px);
-}
-
 .header-user .dropdown-item {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 8px 10px;
-  border-radius: 6px;
+  padding: 8px 12px;
+  border-radius: var(--radius-sm);
   color: var(--text-secondary);
   font-size: 13px;
-  transition: all 0.2s ease;
+  transition: all 0.15s;
 }
-
-.header-user .dropdown-item:hover {
-  background: rgba(239, 68, 68, 0.1);
-  color: #ef4444;
-}
-
-.header-user .dropdown-item svg {
-  width: 14px;
-  height: 14px;
-}
+.header-user .dropdown-item:hover { background: var(--tag-red-bg); color: var(--danger); }
+.header-user .dropdown-item svg { width: 14px; height: 14px; }
 
 /* 主内容 */
 .main-content {
-  padding: 20px;
+  padding: 24px;
   overflow-y: auto;
   flex: 1;
 }
 
 /* ========== 响应式 ========== */
 @media (max-width: 768px) {
-  .sidebar {
-    width: 60px !important;
-    padding: 16px 8px;
-  }
-
-  .logo-section {
-    padding: 0 0 16px;
-    justify-content: center;
-    border-bottom: var(--border-light);
-  }
-
-  .logo-text {
-    display: none;
-  }
-
-  .nav-label {
-    display: none;
-  }
-
-  .nav-item {
-    justify-content: center;
-    padding: 10px;
-  }
-
-  .sidebar-footer {
-    display: none;
-  }
-
-  .main-content {
-    padding: 16px;
-  }
-
-  .header-user .user-name {
-    display: none;
-  }
+  .sidebar { width: 60px !important; padding: 16px 8px; }
+  .sidebar::before { display: none; }
+  .logo-section { padding: 12px 0 16px; justify-content: center; border-bottom: 1px solid var(--sidebar-border); }
+  .logo-text { display: none; }
+  .nav-label, .nav-group-label { display: none; }
+  .nav-item { justify-content: center; padding: 10px; }
+  .nav-item.active::before { display: none; }
+  .sidebar-footer { display: none; }
+  .main-content { padding: 16px; }
+  .header-user .user-name { display: none; }
 }
 </style>

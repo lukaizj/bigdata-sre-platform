@@ -6,6 +6,9 @@ const { query } = require('../models');
 const path = require('path');
 const fs = require('fs');
 
+const MAX_AI_RECORDS = 50;
+const MAX_DB_DATA_SIZE = 10000;
+
 // 技能执行器映射 - 动态加载
 const skillExecutors = {};
 
@@ -95,8 +98,7 @@ async function handleChat(agentId, message) {
   });
 
   // 获取智能体关联的技能
-  const allSkills = await Skill.getAll();
-  const agentSkills = allSkills.filter(s => agent.skills.includes(s.id));
+  const agentSkills = await Skill.getByIds(agent.skills);
 
   if (agentSkills.length === 0) {
     return {
@@ -182,10 +184,10 @@ async function handleChat(agentId, message) {
           status: 'running'
         });
 
-        // 截断数据避免 AI API 超载（最多传 50 条记录）
+        // 截断数据避免 AI API 超载
         let dataForAI = result.data;
-        if (Array.isArray(dataForAI) && dataForAI.length > 50) {
-          dataForAI = dataForAI.slice(0, 50);
+        if (Array.isArray(dataForAI) && dataForAI.length > MAX_AI_RECORDS) {
+          dataForAI = dataForAI.slice(0, MAX_AI_RECORDS);
         }
 
         response = await generateResponse(message, dataForAI, agentSkills);
@@ -206,15 +208,11 @@ async function handleChat(agentId, message) {
 
   // 保存对话记录 (限制数据大小避免数据库包过大)
   const conversationId = uuidv4();
-  let dataToSave = lastResult;
-  const dataStr = JSON.stringify(dataToSave);
-  if (dataStr.length > 10000) {
-    // 数据太大时截断或设为 null
-    dataToSave = null;
-  }
+  const dataStr = JSON.stringify(lastResult);
+  const dataToSave = dataStr.length > MAX_DB_DATA_SIZE ? null : dataStr;
   await query(
     'INSERT INTO conversations (id, agent_id, message, response, data) VALUES (?, ?, ?, ?, ?)',
-    [conversationId, agentId, message, response, JSON.stringify(dataToSave)]
+    [conversationId, agentId, message, response, dataToSave]
   );
 
   return { response, data: lastResult, steps: executionSteps };

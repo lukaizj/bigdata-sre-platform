@@ -1,15 +1,14 @@
 <template>
   <div class="dingtalk-page">
-    <div class="page-header fade-in-up">
+    <div class="page-header">
       <h3>钉钉配置</h3>
       <p>配置钉钉机器人接入智能体对话</p>
     </div>
 
     <!-- 状态卡片 -->
-    <div class="status-section glass-card fade-in-up delay-1">
+    <div class="status-section card">
       <div class="section-header">
         <h4>
-          <span class="icon">📊</span>
           服务状态
         </h4>
         <el-button size="small" @click="refreshStatus" :loading="refreshing">
@@ -19,7 +18,6 @@
 
       <div class="status-grid">
         <div class="status-card">
-          <div class="status-icon">🔗</div>
           <div class="status-info">
             <h5>连接状态</h5>
             <span :class="['status-badge', connectionStatus]">
@@ -29,7 +27,6 @@
         </div>
 
         <div class="status-card">
-          <div class="status-icon">📨</div>
           <div class="status-info">
             <h5>消息统计</h5>
             <div class="message-stats">
@@ -39,7 +36,6 @@
         </div>
 
         <div class="status-card">
-          <div class="status-icon">🤖</div>
           <div class="status-info">
             <h5>当前智能体</h5>
             <span class="agent-name">{{ currentAgentName || '未配置' }}</span>
@@ -49,10 +45,9 @@
     </div>
 
     <!-- 配置表单 -->
-    <div class="config-section glass-card fade-in-up delay-2">
+    <div class="config-section card">
       <div class="section-header">
         <h4>
-          <span class="icon">⚙️</span>
           基础配置
         </h4>
         <el-button type="primary" size="small" @click="saveConfig" :loading="saving">
@@ -114,10 +109,9 @@
     </div>
 
     <!-- 智能体映射配置 -->
-    <div class="mapping-section glass-card fade-in-up delay-3">
+    <div class="mapping-section card">
       <div class="section-header">
         <h4>
-          <span class="icon">🔗</span>
           智能体映射
         </h4>
         <el-button type="primary" size="small" @click="showAddMappingDialog">
@@ -152,16 +146,14 @@
         </div>
       </div>
       <div v-else class="empty-mapping">
-        <span class="empty-icon">📭</span>
         <p>暂无智能体映射，点击"添加映射"按钮创建</p>
       </div>
     </div>
 
     <!-- 使用说明 -->
-    <div class="guide-section glass-card fade-in-up delay-3">
+    <div class="guide-section card">
       <div class="section-header">
         <h4>
-          <span class="icon">📖</span>
           使用说明
         </h4>
       </div>
@@ -297,7 +289,6 @@ const loadConfig = async () => {
       config.value.clientSecret = res.data.clientSecret || ''
       config.value.defaultAgentId = res.data.defaultAgentId || ''
       config.value.enabled = res.data.enabled || false
-      agents.value = res.data.availableAgents || []
     }
   } catch (err) {
     ElMessage.error('加载配置失败，请刷新页面重试')
@@ -421,11 +412,8 @@ const deleteMapping = async (conversationId) => {
   }
 }
 
-onMounted(() => {
-  loadConfig()
-  loadAgents()
-  refreshStatus()
-  loadAgentMappings()
+onMounted(async () => {
+  await Promise.all([loadConfig(), loadAgents(), refreshStatus(), loadAgentMappings()])
 })
 </script>
 
@@ -464,16 +452,9 @@ onMounted(() => {
 }
 
 .section-header h4 {
-  display: flex;
-  align-items: center;
-  gap: 10px;
   font-size: 18px;
   font-weight: 600;
   color: var(--text-primary);
-}
-
-.section-header .icon {
-  font-size: 22px;
 }
 
 .status-grid {
@@ -487,25 +468,13 @@ onMounted(() => {
   gap: 16px;
   padding: 20px;
   background: var(--bg-hover);
-  border-radius: 14px;
-  border: var(--border-light);
+  border-radius: var(--radius-md);
+  border: var(--border-medium-line);
   transition: all 0.2s ease;
 }
 
 .status-card:hover {
   border-color: var(--accent);
-}
-
-.status-icon {
-  width: 48px;
-  height: 48px;
-  background: rgba(99, 102, 241, 0.15);
-  border-radius: 14px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 24px;
-  flex-shrink: 0;
 }
 
 .status-info {
@@ -522,23 +491,23 @@ onMounted(() => {
 .status-badge {
   display: inline-block;
   padding: 4px 12px;
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   font-size: 13px;
   font-weight: 500;
 }
 
 .status-badge.connected {
-  background: rgba(16, 185, 129, 0.15);
-  color: var(--success);
+  background: var(--tag-green-bg);
+  color: var(--tag-green-text);
 }
 
 .status-badge.disconnected {
-  background: rgba(239, 68, 68, 0.15);
-  color: var(--danger);
+  background: var(--tag-red-bg);
+  color: var(--tag-red-text);
 }
 
 .status-badge.unknown {
-  background: rgba(107, 114, 128, 0.15);
+  background: var(--bg-hover);
   color: var(--text-muted);
 }
 
@@ -572,7 +541,7 @@ onMounted(() => {
   gap: 12px;
   align-items: center;
   padding-top: 20px;
-  border-top: var(--border-light);
+  border-top: var(--border-weak-line);
 }
 
 .test-result {
@@ -598,8 +567,8 @@ onMounted(() => {
   color: var(--text-secondary);
   margin-bottom: 20px;
   padding: 12px 16px;
-  background: rgba(99, 102, 241, 0.08);
-  border-radius: 8px;
+  background: var(--bg-hover);
+  border-radius: var(--radius-lg);
   border-left: 3px solid var(--accent);
 }
 
@@ -615,8 +584,8 @@ onMounted(() => {
   align-items: center;
   padding: 16px;
   background: var(--bg-hover);
-  border-radius: 12px;
-  border: var(--border-light);
+  border-radius: var(--radius-md);
+  border: var(--border-medium-line);
   transition: all 0.2s ease;
 }
 
@@ -690,15 +659,15 @@ onMounted(() => {
   gap: 16px;
   padding: 16px;
   background: var(--bg-hover);
-  border-radius: 12px;
-  border: var(--border-light);
+  border-radius: var(--radius-md);
+  border: var(--border-medium-line);
 }
 
 .step-number {
   width: 36px;
   height: 36px;
-  background: var(--gradient-primary);
-  border-radius: 10px;
+  background: var(--accent);
+  border-radius: var(--radius-sm);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -723,10 +692,10 @@ onMounted(() => {
 
 .step-content code {
   padding: 2px 6px;
-  background: rgba(99, 102, 241, 0.15);
-  border-radius: 4px;
-  font-family: monospace;
+  background: var(--tag-blue-bg);
+  border-radius: var(--radius-sm);
+  font-family: var(--font-mono);
   font-size: 13px;
-  color: var(--accent);
+  color: var(--tag-blue-text);
 }
 </style>

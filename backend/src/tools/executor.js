@@ -6,6 +6,7 @@
 const axios = require('axios');
 const config = require('../config');
 const { TOOL_NAMES } = require('./definitions');
+const { formatBytes } = require('../utils/format');
 
 // 加载现有技能
 const hdfsQuery = require('../../skills/hdfs-query/index');
@@ -512,16 +513,6 @@ async function executeAmbariAction(args, settings) {
 - 结果: 执行完成`;
 
   return { data: result.data, summary };
-}
-
-/**
- * 格式化字节大小
- */
-function formatBytes(bytes) {
-  if (!bytes || bytes === 0) return '0 B';
-  const units = ['B', 'KB', 'MB', 'GB', 'TB'];
-  const i = Math.floor(Math.log(bytes) / Math.log(1024));
-  return (bytes / Math.pow(1024, i)).toFixed(2) + ' ' + units[i];
 }
 
 module.exports = {

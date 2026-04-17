@@ -14,22 +14,29 @@ class Skill {
     this.updatedAt = data.updated_at;
   }
 
-  static async getAll() {
-    const rows = await query('SELECT * FROM skills ORDER BY created_at DESC');
-    return rows.map(row => new Skill({
+  static _fromRow(row) {
+    return new Skill({
       ...row,
       config: typeof row.config === 'string' ? JSON.parse(row.config) : (row.config || {}),
-    }));
+    });
+  }
+
+  static async getAll() {
+    const rows = await query('SELECT * FROM skills ORDER BY created_at DESC');
+    return rows.map(Skill._fromRow);
+  }
+
+  static async getByIds(ids) {
+    if (!Array.isArray(ids) || ids.length === 0) return [];
+    const placeholders = ids.map(() => '?').join(',');
+    const rows = await query(`SELECT * FROM skills WHERE id IN (${placeholders})`, ids);
+    return rows.map(Skill._fromRow);
   }
 
   static async getById(id) {
     const rows = await query('SELECT * FROM skills WHERE id = ?', [id]);
     if (rows.length === 0) return null;
-    const row = rows[0];
-    return new Skill({
-      ...row,
-      config: typeof row.config === 'string' ? JSON.parse(row.config) : (row.config || {}),
-    });
+    return Skill._fromRow(rows[0]);
   }
 
   static async update(id, data) {

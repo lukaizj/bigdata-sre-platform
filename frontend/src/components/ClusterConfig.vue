@@ -1,19 +1,18 @@
 <template>
   <div class="config-container">
-    <div class="config-header fade-in-up">
+    <div class="config-header">
       <h3>集群配置</h3>
       <p>配置多个大数据集群的连接地址和认证信息</p>
     </div>
 
     <!-- 集群列表 -->
-    <div class="clusters-section glass-card fade-in-up delay-1">
+    <div class="clusters-section card">
       <div class="section-header">
         <h4>
-          <span class="icon">🏗️</span>
           集群列表
         </h4>
         <el-button type="primary" size="small" @click="addCluster">
-          <span>➕</span> 添加集群
+          添加集群
         </el-button>
       </div>
 
@@ -21,7 +20,7 @@
         <div
           v-for="(cluster, index) in clusters"
           :key="cluster.id"
-          class="cluster-card glass-card"
+          class="cluster-card card"
           :class="{ active: activeClusterId === cluster.id }"
           @click="selectCluster(cluster.id)"
         >
@@ -35,36 +34,36 @@
             </div>
             <div class="cluster-actions">
               <el-button size="small" text @click.stop="editClusterMeta(cluster)">
-                <span>✏️</span>
+                编辑
               </el-button>
               <el-button size="small" text type="danger" @click.stop="removeCluster(cluster.id)">
-                <span>🗑️</span>
+                删除
               </el-button>
             </div>
           </div>
           <div class="cluster-services">
             <div class="service-badge" :class="{ active: cluster.hadoop?.namenodeUrl }">
-              <span>🐘</span> HDFS
+              HDFS
             </div>
             <div class="service-badge" :class="{ active: cluster.hadoop?.yarnUrl }">
-              <span>⚡</span> YARN
+              YARN
             </div>
             <div class="service-badge" :class="{ active: cluster.ambari?.url }">
-              <span>🔧</span> Ambari
+              Ambari
             </div>
           </div>
         </div>
 
         <!-- 添加集群卡片 -->
         <div class="cluster-card add-card" @click="addCluster">
-          <div class="add-icon">➕</div>
+          <div class="add-icon">+</div>
           <span>添加新集群</span>
         </div>
       </div>
     </div>
 
     <!-- 集群详情配置 -->
-    <div v-if="currentCluster" class="cluster-detail glass-card fade-in-up delay-2">
+    <div v-if="currentCluster" class="cluster-detail card">
       <div class="detail-header">
         <div class="cluster-title">
           <span class="cluster-icon-lg">{{ currentCluster.icon || '🏢' }}</span>
@@ -83,7 +82,6 @@
         <el-tab-pane label="Hadoop" name="hadoop">
           <div class="config-section">
             <div class="section-title">
-              <span class="icon">🐘</span>
               <span>Hadoop 集群</span>
             </div>
             <el-form :model="currentCluster.hadoop" label-position="top" class="config-form">
@@ -184,7 +182,6 @@
         <el-tab-pane label="Ambari" name="ambari">
           <div class="config-section">
             <div class="section-title">
-              <span class="icon">🔧</span>
               <span>Ambari 管理</span>
             </div>
             <el-form :model="currentCluster.ambari" label-position="top" class="config-form">
@@ -264,10 +261,9 @@
     </div>
 
     <!-- 全局 Spark 配置 -->
-    <div class="spark-section glass-card fade-in-up delay-3">
+    <div class="spark-section card">
       <div class="section-header">
         <h4>
-          <span class="icon">🔥</span>
           Spark History Server（全局）
         </h4>
         <el-button size="small" @click="testSparkConnection" :loading="testingSpark">
@@ -301,14 +297,13 @@
     </div>
 
     <!-- AI 模型配置 -->
-    <div class="models-section glass-card fade-in-up delay-3">
+    <div class="models-section card">
       <div class="section-header">
         <h4>
-          <span class="icon">🤖</span>
           AI 模型配置
         </h4>
         <el-button type="primary" size="small" @click="addModel">
-          <span>➕</span> 添加模型
+          添加模型
         </el-button>
       </div>
 
@@ -581,7 +576,7 @@ const saveClusters = async () => {
       clusters: clusters.value,
     })
   } catch (err) {
-    console.error('保存失败:', err)
+    ElMessage.error('保存集群配置失败')
   }
 }
 
@@ -591,7 +586,7 @@ const saveGlobalSettings = async () => {
       sparkHistoryUrl: globalSparkUrl.value,
     })
   } catch (err) {
-    console.error('保存失败:', err)
+    ElMessage.error('保存全局设置失败')
   }
 }
 
@@ -789,16 +784,9 @@ onMounted(() => {
 }
 
 .section-header h4 {
-  display: flex;
-  align-items: center;
-  gap: 10px;
   font-size: 18px;
   font-weight: 600;
   color: var(--text-primary);
-}
-
-.section-header .icon {
-  font-size: 22px;
 }
 
 /* 集群网格 */
@@ -812,17 +800,16 @@ onMounted(() => {
   padding: 20px;
   cursor: pointer;
   transition: all 0.2s ease;
-  border: var(--border-light);
+  border: var(--border-medium-line);
 }
 
 .cluster-card:hover {
-  transform: translateY(-2px);
   border-color: var(--accent);
 }
 
 .cluster-card.active {
   border-color: var(--accent);
-  background: rgba(59, 130, 246, 0.1);
+  background: var(--bg-hover);
 }
 
 .cluster-header {
@@ -835,8 +822,8 @@ onMounted(() => {
 .cluster-icon {
   width: 44px;
   height: 44px;
-  background: rgba(59, 130, 246, 0.2);
-  border-radius: 12px;
+  background: var(--bg-hover);
+  border-radius: var(--radius-md);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -858,8 +845,8 @@ onMounted(() => {
   font-size: 12px;
   color: var(--text-muted);
   padding: 2px 8px;
-  background: rgba(59, 130, 246, 0.1);
-  border-radius: 4px;
+  background: var(--bg-hover);
+  border-radius: var(--radius-sm);
 }
 
 .cluster-actions {
@@ -884,17 +871,17 @@ onMounted(() => {
   align-items: center;
   gap: 4px;
   padding: 4px 10px;
-  background: rgba(59, 130, 246, 0.05);
-  border: 1px solid rgba(59, 130, 246, 0.15);
-  border-radius: 6px;
+  background: var(--bg-hover);
+  border: var(--border-medium-line);
+  border-radius: var(--radius-sm);
   font-size: 12px;
   color: var(--text-muted);
 }
 
 .service-badge.active {
-  background: rgba(59, 130, 246, 0.15);
-  border-color: rgba(34, 197, 94, 0.3);
-  color: var(--accent);
+  background: var(--tag-blue-bg);
+  border-color: var(--accent);
+  color: var(--tag-blue-text);
 }
 
 /* 添加集群卡片 */
@@ -910,7 +897,7 @@ onMounted(() => {
 
 .add-card:hover {
   border-color: var(--accent);
-  background: rgba(34, 197, 94, 0.05);
+  background: var(--bg-hover);
 }
 
 .add-icon {
@@ -936,7 +923,7 @@ onMounted(() => {
   align-items: center;
   margin-bottom: 24px;
   padding-bottom: 20px;
-  border-bottom: var(--border-light);
+  border-bottom: var(--border-weak-line);
 }
 
 .cluster-title {
@@ -948,12 +935,13 @@ onMounted(() => {
 .cluster-icon-lg {
   width: 56px;
   height: 56px;
-  background: var(--gradient-primary);
-  border-radius: 16px;
+  background: var(--accent);
+  border-radius: var(--radius-lg);
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 28px;
+  color: white;
 }
 
 .cluster-title h4 {
@@ -977,17 +965,10 @@ onMounted(() => {
 }
 
 .section-title {
-  display: flex;
-  align-items: center;
-  gap: 10px;
   margin-bottom: 20px;
   font-size: 16px;
   font-weight: 600;
   color: var(--text-primary);
-}
-
-.section-title .icon {
-  font-size: 22px;
 }
 
 .config-form {
@@ -1006,9 +987,9 @@ onMounted(() => {
 
 .link-btn {
   padding: 8px 12px;
-  border: var(--border-light);
+  border: var(--border-medium-line);
   background: var(--bg-hover);
-  border-radius: 10px;
+  border-radius: var(--radius-sm);
   color: var(--text-muted);
   cursor: pointer;
   transition: all 0.2s ease;
@@ -1018,7 +999,7 @@ onMounted(() => {
 .link-btn:hover {
   border-color: var(--accent);
   color: var(--accent);
-  background: rgba(99, 102, 241, 0.1);
+  background: var(--bg-hover);
 }
 
 .link-btn svg {
@@ -1028,9 +1009,9 @@ onMounted(() => {
 
 .kerberos-config {
   padding: 16px;
-  background: rgba(59, 130, 246, 0.05);
-  border: 1px solid rgba(59, 130, 246, 0.15);
-  border-radius: 12px;
+  background: var(--bg-hover);
+  border: var(--border-weak-line);
+  border-radius: var(--radius-md);
   margin-top: 16px;
 }
 
@@ -1039,7 +1020,7 @@ onMounted(() => {
   gap: 12px;
   align-items: center;
   padding-top: 20px;
-  border-top: var(--border-light);
+  border-top: var(--border-weak-line);
 }
 
 .test-result {
@@ -1086,14 +1067,14 @@ onMounted(() => {
 .model-card {
   padding: 20px;
   background: var(--bg-hover);
-  border: var(--border-light);
-  border-radius: 14px;
+  border: var(--border-medium-line);
+  border-radius: var(--radius-md);
   transition: all 0.2s ease;
 }
 
 .model-card.active {
   border-color: var(--accent);
-  background: rgba(59, 130, 246, 0.08);
+  background: var(--bg-hover);
 }
 
 .model-card.disabled {
@@ -1128,9 +1109,9 @@ onMounted(() => {
 .badge-default {
   font-size: 11px;
   padding: 2px 8px;
-  background: var(--gradient-primary);
+  background: var(--accent);
   color: white;
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
 }
 
 .badge-status {
@@ -1140,13 +1121,13 @@ onMounted(() => {
 }
 
 .badge-status.enabled {
-  background: rgba(16, 185, 129, 0.15);
-  color: var(--success);
+  background: var(--tag-green-bg);
+  color: var(--tag-green-text);
 }
 
 .badge-status.disabled {
-  background: rgba(239, 68, 68, 0.15);
-  color: var(--danger);
+  background: var(--tag-red-bg);
+  color: var(--tag-red-text);
 }
 
 .model-details {
@@ -1187,9 +1168,9 @@ onMounted(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(59, 130, 246, 0.05);
-  border: 1px solid rgba(59, 130, 246, 0.15);
-  border-radius: 10px;
+  background: var(--bg-hover);
+  border: var(--border-medium-line);
+  border-radius: var(--radius-sm);
   font-size: 20px;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -1200,7 +1181,7 @@ onMounted(() => {
 }
 
 .icon-option.active {
-  background: rgba(59, 130, 246, 0.2);
+  background: var(--tag-blue-bg);
   border-color: var(--accent);
 }
 </style>
