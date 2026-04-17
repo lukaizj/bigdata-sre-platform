@@ -82,10 +82,17 @@ async function initUserTable() {
 // POST /api/auth/register - 用户注册
 router.post('/register', async (req, res) => {
   try {
-    const { email, username, password } = req.body;
+    const { email, username, password, captchaId, captchaCode } = req.body;
 
     if (!email || !username || !password) {
       return res.status(400).json({ error: '请填写完整的注册信息' });
+    }
+
+    // 校验验证码
+    const captchaResult = captchaStore.verify(captchaId, captchaCode);
+    if (!captchaResult.valid) {
+      const msg = captchaResult.reason === 'expired' ? '验证码已过期，请刷新' : '验证码错误';
+      return res.status(400).json({ error: msg, refreshCaptcha: true });
     }
 
     // 验证邮箱格式
@@ -138,10 +145,17 @@ router.post('/register', async (req, res) => {
 // POST /api/auth/login - 用户登录
 router.post('/login', async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const { email, password, captchaId, captchaCode } = req.body;
 
     if (!email || !password) {
       return res.status(400).json({ error: '请输入邮箱和密码' });
+    }
+
+    // 校验验证码
+    const captchaResult = captchaStore.verify(captchaId, captchaCode);
+    if (!captchaResult.valid) {
+      const msg = captchaResult.reason === 'expired' ? '验证码已过期，请刷新' : '验证码错误';
+      return res.status(400).json({ error: msg, refreshCaptcha: true });
     }
 
     // 查找用户
