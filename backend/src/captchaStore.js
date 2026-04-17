@@ -11,7 +11,8 @@ function cleanup() {
     if (now > entry.expireAt) store.delete(id);
   }
 }
-setInterval(cleanup, 60 * 1000); // 每分钟清理一次
+const _cleanupTimer = setInterval(cleanup, 60 * 1000);
+_cleanupTimer.unref(); // 不阻止进程/测试退出
 
 /**
  * 存储验证码
@@ -19,6 +20,7 @@ setInterval(cleanup, 60 * 1000); // 每分钟清理一次
  * @param {string} answer  原始答案（大小写不敏感，统一转小写存储）
  */
 function set(id, answer) {
+  if (!id || !answer) throw new TypeError('captchaStore.set: id and answer are required');
   store.set(id, { answer: answer.toLowerCase(), expireAt: Date.now() + TTL_MS });
 }
 

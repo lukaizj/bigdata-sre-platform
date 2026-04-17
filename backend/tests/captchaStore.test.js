@@ -25,4 +25,12 @@ describe('captchaStore', () => {
     captchaStore.set('id4', 'abc');
     expect(captchaStore.verify('id4', '')).toEqual({ valid: false, reason: 'missing' });
   });
+
+  test('verify returns expired after TTL', () => {
+    jest.useFakeTimers();
+    captchaStore.set('id-ttl', 'abc');
+    jest.advanceTimersByTime(5 * 60 * 1000 + 1);
+    expect(captchaStore.verify('id-ttl', 'abc')).toEqual({ valid: false, reason: 'expired' });
+    jest.useRealTimers();
+  });
 });
