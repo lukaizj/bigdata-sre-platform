@@ -3,8 +3,27 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { query } = require('../models');
 const config = require('../config');
+const svgCaptcha = require('svg-captcha');
+const captchaStore = require('../captchaStore');
 
 const router = express.Router();
+
+// GET /api/auth/captcha - 获取图形验证码
+router.get('/captcha', (req, res) => {
+  const captcha = svgCaptcha.create({
+    size: 4,
+    ignoreChars: '0o1iIlL',
+    noise: 2,
+    color: true,
+    background: '#f4f7ff',
+    width: 120,
+    height: 40,
+    fontSize: 40
+  });
+  const captchaId = require('crypto').randomUUID();
+  captchaStore.set(captchaId, captcha.text);
+  res.json({ captchaId, svg: captcha.data });
+});
 
 // JWT密钥必须从配置获取，启动时会验证
 const JWT_SECRET = config.jwt?.secret;
