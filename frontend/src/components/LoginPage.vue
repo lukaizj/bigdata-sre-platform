@@ -2,7 +2,7 @@
   <div class="login-page" @mousemove="handleMouseMove">
     <!-- 左侧动画面板 -->
     <div class="brand-panel" ref="brandPanelRef">
-      <div class="scene">
+      <div v-if="!lottieLoadFailed" class="scene">
         <div class="char-wrap char1" ref="wrap1">
           <div ref="cont1" class="lottie-cont"></div>
         </div>
@@ -13,7 +13,7 @@
           <div ref="cont3" class="lottie-cont"></div>
         </div>
       </div>
-      <div v-if="lottieLoadFailed" class="lottie-fallback">
+      <div v-else class="lottie-fallback">
         <svg viewBox="0 0 200 80" xmlns="http://www.w3.org/2000/svg" opacity="0.3">
           <circle cx="40" cy="40" r="30" fill="#4a90d9"/>
           <circle cx="100" cy="40" r="20" fill="#7c4dcc"/>
@@ -82,7 +82,7 @@
             <input v-model="loginForm.captchaCode" type="text" placeholder="验证码" required maxlength="6" class="captcha-input"/>
             <button type="button" class="captcha-img-btn" @click="loadCaptcha" title="点击刷新验证码">
               <span v-if="captchaLoading" class="captcha-loading">加载中...</span>
-              <span v-else-if="captchaSvg" v-html="captchaSvg" class="captcha-svg"></span>
+              <img v-else-if="captchaSrc" :src="captchaSrc" alt="验证码" style="display:block;width:120px;height:40px;" />
               <span v-else class="captcha-placeholder">点击获取</span>
             </button>
           </div>
@@ -134,7 +134,7 @@
             <input v-model="registerForm.captchaCode" type="text" placeholder="验证码" required maxlength="6" class="captcha-input"/>
             <button type="button" class="captcha-img-btn" @click="loadCaptcha" title="点击刷新验证码">
               <span v-if="captchaLoading" class="captcha-loading">加载中...</span>
-              <span v-else-if="captchaSvg" v-html="captchaSvg" class="captcha-svg"></span>
+              <img v-else-if="captchaSrc" :src="captchaSrc" alt="验证码" style="display:block;width:120px;height:40px;" />
               <span v-else class="captcha-placeholder">点击获取</span>
             </button>
           </div>
@@ -163,7 +163,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onBeforeUnmount, watch } from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount, watch } from 'vue'
 import lottie from 'lottie-web'
 import axios from 'axios'
 import { STORAGE_KEYS } from '../utils/constants'
@@ -184,17 +184,28 @@ const captchaId = ref('')
 const captchaSvg = ref('')
 const captchaLoading = ref(false)
 
+const captchaSrc = computed(() =>
+  captchaSvg.value
+    ? `data:image/svg+xml,${encodeURIComponent(captchaSvg.value)}`
+    : ''
+)
+
+let captchaGeneration = 0
+
 async function loadCaptcha() {
+  const gen = ++captchaGeneration
   captchaLoading.value = true
   captchaSvg.value = ''
   try {
     const { data } = await axios.get('/api/auth/captcha')
+    if (gen !== captchaGeneration) return
     captchaId.value = data.captchaId
     captchaSvg.value = data.svg
   } catch {
+    if (gen !== captchaGeneration) return
     showToast('验证码加载失败，请重试', 'error')
   } finally {
-    captchaLoading.value = false
+    if (gen === captchaGeneration) captchaLoading.value = false
   }
 }
 
@@ -202,6 +213,7 @@ async function loadCaptcha() {
 watch(tab, () => {
   loginForm.value.captchaCode = ''
   registerForm.value.captchaCode = ''
+  showPwd.value = false
   loadCaptcha()
 })
 
@@ -283,6 +295,7 @@ const lottieLoadFailed = ref(false)
 let lottieInsts = []
 
 function initLottie() {
+  let lottieErrorCount = 0
   const chars = [
     { cont: cont1.value, path: '/lottie/char1.json' },
     { cont: cont2.value, path: '/lottie/char2.json' },
@@ -290,7 +303,10 @@ function initLottie() {
   ]
   lottieInsts = chars.map(({ cont, path }) => {
     const anim = lottie.loadAnimation({ container: cont, renderer: 'svg', loop: true, autoplay: true, path })
-    anim.addEventListener('error', () => { lottieLoadFailed.value = true })
+    anim.addEventListener('error', () => {
+      lottieErrorCount++
+      if (lottieErrorCount >= 3) lottieLoadFailed.value = true
+    })
     return anim
   })
 }
@@ -298,18 +314,23 @@ function initLottie() {
 // ── Mouse tracking ────────────────────────────────────────────────────────────
 const wraps = [wrap1, wrap2, wrap3]
 const factors = [1.0, 0.65, 1.3]
+let rafId = null
 
 function handleMouseMove(e) {
-  const panel = brandPanelRef.value
-  if (!panel) return
-  const rect = panel.getBoundingClientRect()
-  if (e.clientX > rect.right) return
-  const nx = (e.clientX - rect.left) / rect.width - 0.5
-  const ny = (e.clientY - rect.top) / rect.height - 0.5
-  wraps.forEach((wRef, i) => {
-    if (!wRef.value) return
-    const f = factors[i]
-    wRef.value.style.transform = `translate(${nx * 28 * f}px, ${ny * 20 * f}px)`
+  if (rafId) return
+  rafId = requestAnimationFrame(() => {
+    rafId = null
+    const panel = brandPanelRef.value
+    if (!panel) return
+    const rect = panel.getBoundingClientRect()
+    if (e.clientX > rect.right) return
+    const nx = (e.clientX - rect.left) / rect.width - 0.5
+    const ny = (e.clientY - rect.top) / rect.height - 0.5
+    wraps.forEach((wRef, i) => {
+      if (!wRef.value) return
+      const f = factors[i]
+      wRef.value.style.transform = `translate(${nx * 28 * f}px, ${ny * 20 * f}px)`
+    })
   })
 }
 
@@ -318,7 +339,12 @@ onMounted(async () => {
   const token = localStorage.getItem(STORAGE_KEYS.TOKEN)
   const savedUser = localStorage.getItem(STORAGE_KEYS.USER)
   if (token && savedUser) {
-    try { emit('login-success', JSON.parse(savedUser)) } catch {}
+    try {
+      emit('login-success', JSON.parse(savedUser))
+    } catch {
+      localStorage.removeItem(STORAGE_KEYS.TOKEN)
+      localStorage.removeItem(STORAGE_KEYS.USER)
+    }
     return
   }
 
@@ -329,6 +355,7 @@ onMounted(async () => {
 onBeforeUnmount(() => {
   lottieInsts.forEach(i => i.destroy())
   clearTimeout(toastTimer)
+  if (rafId) cancelAnimationFrame(rafId)
 })
 </script>
 
@@ -571,18 +598,6 @@ onBeforeUnmount(() => {
   flex-shrink: 0;
 }
 .captcha-img-btn:hover { background: #e2e8f0; }
-
-.captcha-svg {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  line-height: 0;
-}
-.captcha-svg :deep(svg) {
-  width: 100px;
-  height: 36px;
-  display: block;
-}
 
 .captcha-loading,
 .captcha-placeholder {
