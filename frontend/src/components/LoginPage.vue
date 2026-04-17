@@ -2,7 +2,38 @@
   <div class="login-page" @mousemove="handleMouseMove">
     <!-- 左侧动画面板 -->
     <div class="brand-panel" ref="brandPanelRef">
+      <!-- 云朵装饰 -->
+      <div class="cloud cloud-1"></div>
+      <div class="cloud cloud-2"></div>
+      <div class="cloud cloud-3"></div>
+      <!-- 星星装饰 -->
+      <div class="star star-1"></div>
+      <div class="star star-2"></div>
+      <div class="star star-3"></div>
+      <div class="star star-4"></div>
+      <div class="star star-5"></div>
+      <div class="star star-6"></div>
+      <div class="star star-7"></div>
+      <div class="star star-8"></div>
+      <!-- 光点装饰 -->
+      <div class="light-dot light-1"></div>
+      <div class="light-dot light-2"></div>
+      <div class="light-dot light-3"></div>
+      <div class="light-dot light-4"></div>
+      <div class="light-dot light-5"></div>
+      <!-- Lottie 角色 -->
       <div v-if="!lottieLoadFailed" class="scene">
+        <!-- Background layer characters (smaller, more distant) -->
+        <div class="char-wrap char4" ref="wrap4">
+          <div ref="cont4" class="lottie-cont"></div>
+        </div>
+        <div class="char-wrap char5" ref="wrap5">
+          <div ref="cont5" class="lottie-cont"></div>
+        </div>
+        <div class="char-wrap char6" ref="wrap6">
+          <div ref="cont6" class="lottie-cont"></div>
+        </div>
+        <!-- Foreground layer characters -->
         <div class="char-wrap char1" ref="wrap1">
           <div ref="cont1" class="lottie-cont"></div>
         </div>
@@ -287,9 +318,15 @@ async function handleRegister() {
 const cont1 = ref(null)
 const cont2 = ref(null)
 const cont3 = ref(null)
+const cont4 = ref(null)
+const cont5 = ref(null)
+const cont6 = ref(null)
 const wrap1 = ref(null)
 const wrap2 = ref(null)
 const wrap3 = ref(null)
+const wrap4 = ref(null)
+const wrap5 = ref(null)
+const wrap6 = ref(null)
 const brandPanelRef = ref(null)
 const lottieLoadFailed = ref(false)
 let lottieInsts = []
@@ -297,23 +334,29 @@ let lottieInsts = []
 function initLottie() {
   let lottieErrorCount = 0
   const chars = [
+    // Foreground characters (larger, in front)
     { cont: cont1.value, path: '/lottie/char1.json' },
     { cont: cont2.value, path: '/lottie/char2.json' },
     { cont: cont3.value, path: '/lottie/char3.json' },
+    // Background characters (smaller, behind)
+    { cont: cont4.value, path: '/lottie/char4.json' },
+    { cont: cont5.value, path: '/lottie/char5.json' },
+    { cont: cont6.value, path: '/lottie/char6.json' },
   ]
   lottieInsts = chars.map(({ cont, path }) => {
+    if (!cont) return null
     const anim = lottie.loadAnimation({ container: cont, renderer: 'svg', loop: true, autoplay: true, path })
     anim.addEventListener('error', () => {
       lottieErrorCount++
-      if (lottieErrorCount >= 3) lottieLoadFailed.value = true
+      if (lottieErrorCount >= 6) lottieLoadFailed.value = true
     })
     return anim
-  })
+  }).filter(Boolean)
 }
 
 // ── Mouse tracking ────────────────────────────────────────────────────────────
-const wraps = [wrap1, wrap2, wrap3]
-const factors = [1.0, 0.65, 1.3]
+const wraps = [wrap1, wrap2, wrap3, wrap4, wrap5, wrap6]
+const factors = [1.0, 0.65, 1.3, 0.4, 0.35, 0.45]
 let rafId = null
 
 function handleMouseMove(e) {
@@ -391,12 +434,12 @@ onBeforeUnmount(() => {
 
 .scene {
   position: relative;
-  width: 340px;
-  height: 260px;
+  width: 400px;
+  height: 280px;
   display: flex;
   align-items: flex-end;
   justify-content: center;
-  gap: 16px;
+  gap: 12px;
 }
 
 .char-wrap {
@@ -405,9 +448,16 @@ onBeforeUnmount(() => {
   align-items: flex-end;
 }
 
+/* Foreground characters (larger) */
 .char1 { width: 120px; }
 .char2 { width: 100px; margin-bottom: 30px; }
 .char3 { width: 110px; margin-bottom: 10px; }
+
+/* Background characters (smaller, semi-transparent) */
+.char4, .char5, .char6 { opacity: 0.65; transform: scale(0.7); }
+.char4 { margin-bottom: 50px; margin-left: 15px; }
+.char5 { margin-bottom: 45px; }
+.char6 { margin-right: 20px; margin-bottom: 40px; }
 
 .lottie-cont {
   width: 100%;
@@ -420,6 +470,82 @@ onBeforeUnmount(() => {
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+/* ── Cloud decorations ───────────────────────────────────── */
+.cloud {
+  position: absolute;
+  width: 80px;
+  height: 28px;
+  background: rgba(255,255,255,0.12);
+  border-radius: 20px;
+  pointer-events: none;
+}
+.cloud::before, .cloud::after {
+  content: '';
+  position: absolute;
+  background: inherit;
+  border-radius: 50%;
+}
+.cloud::before { width: 32px; height: 32px; top: -16px; left: 10px; }
+.cloud::after { width: 22px; height: 22px; top: -10px; left: 38px; }
+
+.cloud-1 { top: 12%; left: 8%; animation: cloud-float 4.5s ease-in-out infinite; }
+.cloud-2 { top: 22%; right: 12%; animation: cloud-float 5.5s ease-in-out infinite 1s; }
+.cloud-3 { bottom: 28%; left: 25%; animation: cloud-float 6s ease-in-out infinite 2s; }
+
+@keyframes cloud-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-12px); }
+}
+
+/* ── Star decorations ─────────────────────────────────────── */
+.star {
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  background: white;
+  border-radius: 50%;
+  pointer-events: none;
+  box-shadow: 0 0 6px 2px rgba(255,255,255,0.5);
+}
+
+.star-1 { top: 18%; left: 18%; animation: star-twinkle 2s infinite; }
+.star-2 { top: 32%; left: 55%; animation: star-twinkle 2.5s infinite 0.3s; }
+.star-3 { top: 48%; left: 28%; animation: star-twinkle 3s infinite 0.6s; }
+.star-4 { top: 14%; left: 68%; animation: star-twinkle 2.2s infinite 0.9s; }
+.star-5 { top: 58%; left: 72%; animation: star-twinkle 2.8s infinite 1.2s; }
+.star-6 { top: 42%; left: 48%; animation: star-twinkle 3.2s infinite 0.4s; }
+.star-7 { top: 68%; left: 22%; animation: star-twinkle 2.6s infinite 1.5s; }
+.star-8 { top: 28%; left: 42%; animation: star-twinkle 2.4s infinite 0.8s; }
+
+@keyframes star-twinkle {
+  0%, 100% { opacity: 0.3; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.4); }
+}
+
+/* ── Light dot decorations ───────────────────────────── */
+.light-dot {
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  background: radial-gradient(circle, rgba(255,255,255,0.85) 0%, transparent 70%);
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.light-1 { top: 22%; left: 32%; animation: light-drift 8s infinite; }
+.light-2 { top: 42%; left: 52%; animation: light-drift 10s infinite 2s; }
+.light-3 { top: 62%; left: 38%; animation: light-drift 9s infinite 4s; }
+.light-4 { top: 32%; left: 62%; animation: light-drift 11s infinite 1s; }
+.light-5 { top: 52%; left: 23%; animation: light-drift 7s infinite 3s; }
+
+@keyframes light-drift {
+  0% { transform: translate(0, 0); opacity: 0.5; }
+  25% { transform: translate(12px, -8px); opacity: 0.85; }
+  50% { transform: translate(4px, -20px); opacity: 0.4; }
+  75% { transform: translate(-8px, -8px); opacity: 0.7; }
+  100% { transform: translate(0, 0); opacity: 0.5; }
 }
 
 /* ── Right form panel ───────────────────────────────────────────── */
