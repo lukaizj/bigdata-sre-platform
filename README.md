@@ -8,10 +8,12 @@
 
 - **智能对话**: 通过自然语言与 AI 交互，查询集群状态、分析日志、排查问题
 - **智能体管理**: 创建和管理多个运维智能体，配置专属技能
-- **技能系统**: 模块化技能架构，支持灵活组合和链式执行
+- **技能系统**: 模块化技能架构，支持灵活组合、链式执行，以及 ZIP/目录热导入
 - **MCP 工具集成**: 直接调用 MCP 工具，绕过 AI 路由，响应更快
-- **多集群管理**: 支持配置多套 Hadoop/Spark/YARN 集群，灵活切换
-- **用户权限管理**: 支持管理员和普通用户角色，可配置模块访问权限
+- **多集群管理**: 支持配置多套 Hadoop/Spark/YARN 集群，一键测试连通性并切换
+- **钉钉集成**: 钉钉机器人接入、会话托管、智能体与群聊的映射管理
+- **用户权限管理**: 支持管理员和普通用户角色，可配置模块访问权限，支持个人资料与密码修改
+- **登录安全**: SVG 图形验证码、JWT 会话、注册/登录双重验证
 
 ### UI 特性
 
@@ -135,18 +137,23 @@ npm run build
 ### 默认账号
 
 - 管理员: `admin@bigdata.local` / `admin123`
-- 可在用户管理页面创建其他用户
+- 登录/注册需填写 SVG 图形验证码（首次进入页面自动加载，点击图片可刷新）
+- 可在用户管理页面创建其他用户，或进入个人中心修改资料与密码
 
 ## API 接口
 
 ### 认证
 
 ```http
-POST   /api/auth/login         # 登录
-POST   /api/auth/register      # 注册
+GET    /api/auth/captcha       # 获取 SVG 图形验证码
+POST   /api/auth/login         # 登录（需 captchaId + captchaCode）
+POST   /api/auth/register      # 注册（需 captchaId + captchaCode）
 GET    /api/auth/me            # 获取当前用户信息
-GET    /api/auth/users         # 获取用户列表（管理员）
-PUT    /api/auth/users/:id     # 更新用户信息
+PUT    /api/auth/profile       # 修改个人资料
+PUT    /api/auth/password      # 修改密码
+GET    /api/auth/users         # 用户列表（管理员）
+PUT    /api/auth/users/:id     # 更新用户（管理员）
+DELETE /api/auth/users/:id     # 删除用户（管理员）
 ```
 
 ### 智能体
@@ -162,29 +169,56 @@ DELETE /api/agents/:id         # 删除智能体
 
 ```http
 GET    /api/skills             # 获取所有技能
+GET    /api/skills/:id         # 获取技能详情
 PUT    /api/skills/:id         # 更新技能配置
-POST   /api/skills/sync        # 同步技能定义
+POST   /api/skills/sync        # 同步技能定义到磁盘
 GET    /api/skills/dirs        # 获取技能目录信息
+GET    /api/skills/raw/:id     # 获取原始技能文件
+POST   /api/skills/import      # 从 URL/路径导入技能
+POST   /api/skills/import/file # 上传 ZIP 文件导入技能
 ```
 
 ### 对话
 
 ```http
-POST   /api/chat               # 发送消息（Skills 模式）
-POST   /api/chat/mcp           # 发送消息（MCP 模式）
-GET    /api/chat/mcp-tools     # 获取可用 MCP 工具
+POST   /api/chat               # 发送消息（AI 驱动，支持会话上下文）
+POST   /api/chat/mcp           # 发送消息（MCP 工具模式）
+POST   /api/chat/skills        # 发送消息（Skills 直调模式）
+GET    /api/chat/mcp-tools     # 获取可用 MCP 工具列表
+GET    /api/chat/stats         # 会话统计
+DELETE /api/chat/session/:id   # 清除指定会话
 ```
 
-### 集群配置
+### 集群与模型配置
 
 ```http
-GET    /api/settings           # 获取所有配置
-PUT    /api/settings           # 更新集群配置
-POST   /api/settings/model     # 添加 AI 模型
-PUT    /api/settings/model/:id # 更新模型配置
-DELETE /api/settings/model/:id # 删除模型
-POST   /api/settings/test-connection  # 测试集群连接
-POST   /api/settings/test-ai   # 测试 AI 模型连接
+GET    /api/settings                    # 获取所有配置
+PUT    /api/settings                    # 更新全局配置
+GET    /api/settings/cluster/status     # 所有集群的连通性状态
+GET    /api/settings/cluster/:id        # 获取指定集群配置
+POST   /api/settings/cluster            # 新增集群
+DELETE /api/settings/cluster/:id        # 删除集群
+POST   /api/settings/test-connection    # 测试集群连接
+POST   /api/settings/model              # 添加 AI 模型
+PUT    /api/settings/model/:id          # 更新模型配置
+DELETE /api/settings/model/:id          # 删除模型
+POST   /api/settings/model/:id/set-default # 设为默认模型
+POST   /api/settings/test-ai            # 测试 AI 模型连接
+```
+
+### 钉钉集成
+
+```http
+POST   /api/dingtalk/chat               # 钉钉机器人入口（回调）
+GET    /api/dingtalk/status             # 机器人运行状态
+GET    /api/dingtalk/config             # 获取配置
+PUT    /api/dingtalk/config             # 更新配置
+POST   /api/dingtalk/test-connection    # 测试钉钉连接
+GET    /api/dingtalk/health             # 健康检查
+POST   /api/dingtalk/update-status      # 主动上报状态
+GET    /api/dingtalk/agent-mappings     # 群聊 ↔ 智能体映射
+POST   /api/dingtalk/agent-mappings     # 新建映射
+DELETE /api/dingtalk/agent-mappings/:id # 删除映射
 ```
 
 ## 使用示例
@@ -228,15 +262,20 @@ curl -X POST http://localhost:5173/api/chat \
 
 **前端**:
 - Vue 3 (Composition API)
+- Vite 构建工具
 - Element Plus UI 组件库
-- ECharts 图表库
+- ECharts 图表库（动态渲染 AI 生成的图表）
 - Axios HTTP 客户端
+- JetBrains Mono + DM Sans + Sarasa Mono SC 字体栈
 
 **后端**:
 - Node.js / Express
 - MySQL 数据库
 - JWT 认证
+- svg-captcha（图形验证码）
+- multer（ZIP 技能包上传）
 - MCP 协议支持
+- 钉钉 Stream SDK
 
 **AI**:
 - GLM-4 / GLM-5 (智谱 AI)
@@ -246,18 +285,39 @@ curl -X POST http://localhost:5173/api/chat \
 
 ```
 bigdata-sre-platform/
-├── frontend/                # 前端项目
+├── frontend/                       # 前端项目
+│   ├── public/
+│   │   └── favicon.svg             # 青色六边形波形 favicon
 │   ├── src/
-│   │   ├── components/      # Vue 组件
-│   │   ├── styles/          # 样式文件
-│   │   └── App.vue          # 主应用
+│   │   ├── components/             # Vue 组件
+│   │   │   ├── LoginPage.vue       # NEXUS HUD 登录页
+│   │   │   ├── ChatView.vue        # 终端风格对话
+│   │   │   ├── ClusterDashboard.vue
+│   │   │   ├── AgentManagement.vue
+│   │   │   ├── SkillManagement.vue
+│   │   │   ├── ClusterConfig.vue
+│   │   │   ├── DingtalkConfig.vue
+│   │   │   ├── UserManagement.vue
+│   │   │   ├── UserGuide.vue
+│   │   │   └── EChartRenderer.vue
+│   │   ├── styles/                 # theme.css 等
+│   │   ├── utils/
+│   │   └── App.vue
 │   └── package.json
-├── backend/                 # 后端项目
+├── backend/                        # 后端项目
 │   ├── src/
-│   │   ├── routes/          # API 路由
-│   │   ├── skills/          # 技能定义
-│   │   └── index.js         # 入口文件
+│   │   ├── config/                 # 配置加载
+│   │   ├── models/                 # 数据模型
+│   │   ├── routes/                 # API 路由
+│   │   ├── services/               # 业务服务（AI、钉钉、集群适配）
+│   │   ├── tools/                  # MCP 工具注册
+│   │   ├── utils/                  # 工具函数
+│   │   ├── captchaStore.js         # 验证码内存存储
+│   │   └── index.js                # 入口文件
 │   └── package.json
+├── docs/superpowers/               # 设计规格与计划
+├── DESIGN.md                       # 设计理念
+├── DOCKER.md                       # 容器化部署说明
 └── README.md
 ```
 
