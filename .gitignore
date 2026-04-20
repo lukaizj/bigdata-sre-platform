@@ -35,3 +35,10 @@ coverage/
 
 # Sensitive files
 DATABASE_CREDENTIALS.md
+
+# Git worktrees
+.worktrees/
+
+# Test artifacts
+frontend/test-results/
+frontend/playwright-report/

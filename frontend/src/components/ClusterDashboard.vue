@@ -359,11 +359,11 @@ watch(selectedClusterId, () => {
 }
 
 .card-hdfs .card-accent-bar {
-  background: linear-gradient(90deg, #0369a1 0%, #0ea5e9 100%);
+  background: linear-gradient(90deg, #0f766e 0%, #14b8a6 100%);
 }
 
 .card-yarn .card-accent-bar {
-  background: linear-gradient(90deg, #7c3aed 0%, #a78bfa 100%);
+  background: linear-gradient(90deg, #b45309 0%, #f59e0b 100%);
 }
 
 .card-spark .card-accent-bar {
@@ -390,21 +390,21 @@ watch(selectedClusterId, () => {
 }
 
 .stat-icon-wrap.hdfs {
-  background: rgba(3, 105, 161, 0.1);
-  color: #0369a1;
+  background: rgba(15, 118, 110, 0.1);
+  color: #0f766e;
 }
 [data-theme="dark"] .stat-icon-wrap.hdfs {
-  background: rgba(56, 189, 248, 0.1);
-  color: #38bdf8;
+  background: rgba(20, 184, 166, 0.1);
+  color: #14b8a6;
 }
 
 .stat-icon-wrap.yarn {
-  background: rgba(124, 58, 237, 0.1);
-  color: #7c3aed;
+  background: rgba(180, 83, 9, 0.1);
+  color: #b45309;
 }
 [data-theme="dark"] .stat-icon-wrap.yarn {
-  background: rgba(167, 139, 250, 0.1);
-  color: #a78bfa;
+  background: rgba(245, 158, 11, 0.1);
+  color: #f59e0b;
 }
 
 .stat-icon-wrap.spark {
@@ -542,8 +542,8 @@ watch(selectedClusterId, () => {
   align-items: center;
   gap: 8px;
 }
-.quick-btns button:nth-child(1) { border-left: 3px solid #0ea5e9; }
-.quick-btns button:nth-child(2) { border-left: 3px solid #a78bfa; }
+.quick-btns button:nth-child(1) { border-left: 3px solid #14b8a6; }
+.quick-btns button:nth-child(2) { border-left: 3px solid #f59e0b; }
 .quick-btns button:nth-child(3) { border-left: 3px solid #fbbf24; }
 .quick-btns button:hover {
   border-color: var(--accent);

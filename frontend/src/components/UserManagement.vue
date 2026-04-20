@@ -548,7 +548,7 @@ onMounted(() => {
   color: var(--accent);
 }
 .stat-card-purple .stat-icon svg {
-  color: var(--purple);
+  color: var(--accent2);
 }
 .stat-card-cyan .stat-icon svg {
   color: var(--info);

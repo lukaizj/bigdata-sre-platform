@@ -312,7 +312,7 @@ onMounted(() => {
   left: -20%;
   width: 140%;
   height: 60%;
-  background: radial-gradient(ellipse, rgba(14, 165, 233, 0.12) 0%, transparent 70%);
+  background: radial-gradient(ellipse, rgba(13, 148, 136, 0.12) 0%, transparent 70%);
   pointer-events: none;
 }
 
@@ -336,7 +336,7 @@ onMounted(() => {
   justify-content: center;
   color: white;
   flex-shrink: 0;
-  box-shadow: 0 2px 8px rgba(14, 165, 233, 0.3);
+  box-shadow: 0 2px 8px rgba(13, 148, 136, 0.3);
 }
 .logo-icon svg {
   width: 20px;
@@ -471,8 +471,6 @@ onMounted(() => {
   height: 56px;
   background: var(--bg-primary);
   border-bottom: var(--border-weak-line);
-  backdrop-filter: blur(var(--glass-blur));
-  -webkit-backdrop-filter: blur(var(--glass-blur));
 }
 
 .header-left h2 {
@@ -533,12 +531,10 @@ onMounted(() => {
   right: 0;
   min-width: 150px;
   background: var(--bg-secondary);
-  border: var(--glass-border);
+  border: var(--border-light);
   border-radius: var(--radius-md);
   padding: 4px;
   box-shadow: var(--shadow-lg);
-  backdrop-filter: blur(var(--glass-blur));
-  -webkit-backdrop-filter: blur(var(--glass-blur));
   z-index: 100;
 }
 .header-user .dropdown-item {
