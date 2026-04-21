@@ -117,7 +117,7 @@ onMounted(() => load())
 .page-header h3 { font-size: 22px; font-weight: 700; color: var(--text-primary); margin-bottom: 2px; }
 .page-header p { font-size: 14px; color: var(--text-muted); }
 .agent-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(360px, 1fr)); gap: 16px; }
-.agent-card { display: flex; gap: 16px; padding: 20px; background: var(--bg-primary); border: var(--border-light); border-radius: var(--radius-md); transition: all 0.25s ease; box-shadow: var(--shadow-sm); }
+.agent-card { display: flex; gap: 16px; padding: 20px; background: var(--bg-primary); border: var(--border-medium-line); border-radius: var(--radius-md); transition: all 0.25s ease; box-shadow: var(--shadow-sm); }
 .agent-card:hover { border-color: var(--accent); transform: translateY(-2px); box-shadow: var(--shadow-md); }
 .agent-avatar { width: 48px; height: 48px; background: var(--accent-gradient); border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center; font-size: 16px; color: white; flex-shrink: 0; box-shadow: 0 2px 8px var(--accent-glow); }
 .agent-info { flex: 1; min-width: 0; }

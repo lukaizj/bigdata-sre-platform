@@ -1,386 +1,685 @@
 # DESIGN.md — Big Data SRE Platform
 
-This document defines the complete visual design system for the Big Data SRE Platform (大数据运维智能平台). Any AI coding agent working on this project must follow these rules to produce a consistent UI.
-
----
+> 工业数据终端。不是 AI 玩具，是真正的指挥系统。
 
 ## 1. Visual Theme & Atmosphere
 
-**Identity**: Professional, technical, trustworthy — a monitoring dashboard for big data infrastructure, not a consumer app.
+**Style**: NEXUS // SRE_COMMAND — Industrial Data Terminal  
+**Keywords**: 工业终端、指挥中心、高密度数据、精密仪器、暗色优先、科技克制  
+**Tone**: 冷静权威，信息密度高但不混乱，像一台运行中的控制台 — NOT 消费品、NOT AI 风、NOT 紫色渐变玻璃  
+**Feel**: 坐在卫星控制室里，盯着全球节点状态图，一切都在掌控中  
 
-**Mood**: Calm authority. Clean surfaces with purposeful color accents. The interface should feel like a well-organized control room — information density is high but never chaotic.
+**Interaction Tier**: L1 精致静态（登录页 L2）  
+**Dependencies**: CSS only（登录页加 CSS keyframe 动画，无 JS 动画库）
 
-**Dual-mode design**: Both light and dark themes are equally important, but each has its own personality.
-
-**Light mode** (Enterprise Dashboard): Inspired by Datadog and New Relic. Pure white cards on gray canvas, solid lake blue accent, flat shadows, clear hierarchy. Clarity over polish.
-
-**Dark mode** (Ops Terminal): Inspired by Grafana and Prometheus. Deep zinc backgrounds in 3-tier staircase, solid dark cards, brighter accent for contrast, monospace font for data. Density and readability over aesthetics.
-
-**What this is NOT**: No gradients, no glass-morphism, no glow shadows, no entrance animations, no hover lifts, no emoji icons, no rainbow color coding. These are decorative patterns that belong to AI-generated UIs, not operational tools.
-
----
-
-## 2. Three-Tier Background Staircase
-
-The most important structural pattern. Every surface is assigned to one of 3 tiers, creating natural depth without shadows or glass effects.
-
-### Light Mode
-
-| Tier | Variable | Value | Role |
-|------|----------|-------|------|
-| **Canvas** (deepest) | `--bg-canvas` | `#f4f5f7` | Page grid area, the "floor" |
-| **Primary** (mid) | `--bg-primary` | `#ffffff` | Sidebar, panels, cards, header — sits on canvas |
-| **Secondary** (elevated) | `--bg-secondary` | `#ffffff` | Dropdowns, popovers, dialogs — floats above primary |
-| **Hover** | `--bg-hover` | `#ebedf0` | Hover states, active nav items |
-| **Active** | `--bg-active` | `#dde0e4` | Pressed/active button states |
-
-### Dark Mode (Grafana-inspired)
-
-| Tier | Variable | Value | Role |
-|------|----------|-------|------|
-| **Canvas** (deepest) | `--bg-canvas` | `#0b0c0e` | Page grid area, the "abyss" |
-| **Primary** (mid) | `--bg-primary` | `#141517` | Sidebar, panels, cards — sits on canvas |
-| **Secondary** (elevated) | `--bg-secondary` | `#1a1b1e` | Dropdowns, popovers, dialogs — floats above primary |
-| **Hover** | `--bg-hover` | `#222326` | Hover states, active nav items |
-| **Active** | `--bg-active` | `#2a2b2f` | Pressed/active button states |
-
-**Key rule**: Each tier is ~6-8% brightness apart. This creates natural depth hierarchy without any decorative effects.
+**双模式定义**：
+- **暗色模式（默认 / 主模式）**: 深炭色三层底，青色+琥珀色主色，等宽字体数据展示，LED 状态指示器
+- **亮色模式（日间模式）**: 浅灰底 + 纯白卡片，同色系但调亮，同样工业感，绝不是普通企业白
 
 ---
 
-## 3. Three-Level Border Opacity System
+## 2. Color Palette & Roles
 
-Borders also follow a 3-level system, derived from the same base color at different opacities. This creates visual weight hierarchy for borders.
+```css
+/* ===== 暗色模式（默认）===== */
+[data-theme="dark"],
+:root {
+  /* 三层背景阶梯 */
+  --bg-canvas:   #0a0e14;              /* 最深底，页面背景 */
+  --bg-primary:  rgba(13,17,23,0.96);  /* 侧边栏、卡片 */
+  --bg-secondary:rgba(22,27,34,0.97);  /* 下拉、弹层 */
+  --bg-hover:    rgba(255,255,255,0.05);
+  --bg-active:   rgba(255,255,255,0.09);
+  --bg-solid:    #161b22;
 
-### Light Mode (base: rgba(26, 26, 46, …))
+  /* 主强调色 — 青/teal */
+  --accent:          #14b8a6;
+  --accent-light:    #5eead4;
+  --accent-dark:     #0f766e;
+  --accent-gradient: linear-gradient(135deg, #0f766e 0%, #14b8a6 100%);
+  --accent-glow:     rgba(20,184,166,0.25);
+  --accent-rgb:      20,184,166;
 
-| Level | Variable | Value | Usage |
-|-------|----------|-------|-------|
-| **Weak** | `--border-weak-line` | `1px solid rgba(26,26,46,0.08)` | Inner dividers, subtle separation |
-| **Medium** | `--border-medium-line` | `1px solid rgba(26,26,46,0.15)` | Card borders, visible separation |
-| **Strong** | `--border-strong-line` | `1px solid rgba(26,26,46,0.25)` | Emphasis, focus rings, active borders |
+  /* 次强调色 — 琥珀，用于告警/强调/装饰 */
+  --accent2:          #f59e0b;
+  --accent2-light:    #fbbf24;
+  --accent2-dark:     #d97706;
+  --accent2-gradient: linear-gradient(135deg, #d97706 0%, #f59e0b 100%);
+  --accent2-glow:     rgba(245,158,11,0.25);
+  --accent2-rgb:      245,158,11;
 
-Raw color values (for custom widths like `2px solid`):
-- `--border-weak`: `rgba(26,26,46,0.08)`
-- `--border-medium`: `rgba(26,26,46,0.15)`
-- `--border-strong`: `rgba(26,26,46,0.25)`
+  /* 语义色 */
+  --success:  #4ade80;
+  --warning:  #fbbf24;
+  --danger:   #f87171;
+  --info:     #22d3ee;
+  --success-rgb: 74,222,128;
+  --danger-rgb:  248,113,113;
 
-### Dark Mode (base: rgba(230, 230, 240, …))
+  /* 文字三级 */
+  --text-primary:   rgba(230,237,243,1.00);
+  --text-secondary: rgba(230,237,243,0.78);
+  --text-muted:     rgba(230,237,243,0.56);
+  --text-disabled:  rgba(230,237,243,0.30);
 
-| Level | Variable | Value | Usage |
-|-------|----------|-------|-------|
-| **Weak** | `--border-weak-line` | `1px solid rgba(230,230,240,0.07)` | Inner dividers, subtle separation |
-| **Medium** | `--border-medium-line` | `1px solid rgba(230,230,240,0.15)` | Card borders, visible separation |
-| **Strong** | `--border-strong-line` | `1px solid rgba(230,230,240,0.25)` | Emphasis, focus rings |
+  /* 边框系统 */
+  --border-weak:        rgba(230,237,243,0.07);
+  --border-medium:      rgba(230,237,243,0.12);
+  --border-strong:      rgba(230,237,243,0.22);
+  --border-accent:      rgba(20,184,166,0.40);
+  --border-weak-line:   1px solid rgba(230,237,243,0.07);
+  --border-medium-line: 1px solid rgba(230,237,243,0.12);
+  --border-strong-line: 1px solid rgba(230,237,243,0.22);
+  --border-accent-line: 1px solid rgba(20,184,166,0.40);
+
+  /* LED 状态灯 */
+  --led-green: #4ade80;
+  --led-amber: #fbbf24;
+  --led-red:   #f87171;
+  --led-cyan:  #14b8a6;
+  --led-green-glow: 0 0 7px rgba(74,222,128,0.7);
+  --led-amber-glow: 0 0 7px rgba(251,191,36,0.7);
+  --led-red-glow:   0 0 7px rgba(248,113,113,0.7);
+  --led-cyan-glow:  0 0 7px rgba(20,184,166,0.7);
+
+  /* 阴影 */
+  --shadow-sm:   0 1px 2px rgba(0,0,0,0.35);
+  --shadow-md:   0 3px 8px rgba(0,0,0,0.45);
+  --shadow-lg:   0 8px 24px rgba(0,0,0,0.55);
+  --shadow-glow: 0 0 20px rgba(var(--accent-rgb),0.2);
+
+  /* 圆角 — 较方正 */
+  --radius-xs: 2px;
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 10px;
+
+  /* 字体 */
+  --font-mono: 'JetBrains Mono', 'Sarasa Mono SC', 'Consolas', 'PingFang SC', monospace;
+  --font-body: 'Outfit', -apple-system, BlinkMacSystemFont, 'PingFang SC', sans-serif;
+
+  /* 侧边栏（固定深色，不随主题变化） */
+  --sidebar-bg:          linear-gradient(180deg, #0d1117 0%, #0a0e14 100%);
+  --sidebar-text:        rgba(230,237,243,0.85);
+  --sidebar-text-muted:  rgba(230,237,243,0.42);
+  --sidebar-hover:       rgba(255,255,255,0.05);
+  --sidebar-active:      rgba(20,184,166,0.12);
+  --sidebar-border:      rgba(255,255,255,0.06);
+
+  /* Tag 色对 */
+  --tag-green-bg:  rgba(6,78,59,0.6);    --tag-green-text:  #6ee7b7;
+  --tag-teal-bg:   rgba(19,78,74,0.6);   --tag-teal-text:   #5eead4;
+  --tag-blue-bg:   rgba(30,58,95,0.6);   --tag-blue-text:   #93c5fd;
+  --tag-amber-bg:  rgba(69,26,3,0.6);    --tag-amber-text:  #fbbf24;
+  --tag-orange-bg: rgba(69,26,3,0.6);    --tag-orange-text: #fbbf24;
+  --tag-red-bg:    rgba(69,10,10,0.6);   --tag-red-text:    #fca5a5;
+  --tag-cyan-bg:   rgba(8,51,68,0.6);    --tag-cyan-text:   #67e8f9;
+}
+
+/* ===== 亮色模式（日间模式）===== */
+[data-theme="light"] {
+  --bg-canvas:   #e8eaed;
+  --bg-primary:  rgba(255,255,255,0.92);
+  --bg-secondary:rgba(248,250,252,0.97);
+  --bg-hover:    rgba(0,0,0,0.04);
+  --bg-active:   rgba(0,0,0,0.08);
+  --bg-solid:    #ffffff;
+
+  --accent:          #0d9488;
+  --accent-light:    #14b8a6;
+  --accent-dark:     #0f766e;
+  --accent-gradient: linear-gradient(135deg, #0f766e 0%, #14b8a6 100%);
+  --accent-glow:     rgba(13,148,136,0.15);
+
+  --accent2:       #d97706;
+  --accent2-light: #f59e0b;
+  --accent2-dark:  #b45309;
+  --accent2-glow:  rgba(217,119,6,0.15);
+
+  --success: #059669;
+  --warning: #d97706;
+  --danger:  #dc2626;
+  --info:    #0891b2;
+
+  --text-primary:   #0d1117;
+  --text-secondary: #3d4450;
+  --text-muted:     #6b7280;
+  --text-disabled:  #9ca3af;
+
+  --border-weak:        rgba(13,17,23,0.07);
+  --border-medium:      rgba(13,17,23,0.12);
+  --border-strong:      rgba(13,17,23,0.22);
+  --border-accent:      rgba(13,148,136,0.40);
+  --border-weak-line:   1px solid rgba(13,17,23,0.07);
+  --border-medium-line: 1px solid rgba(13,17,23,0.12);
+  --border-strong-line: 1px solid rgba(13,17,23,0.22);
+  --border-accent-line: 1px solid rgba(13,148,136,0.40);
+
+  --led-green: #059669;
+  --led-amber: #d97706;
+  --led-red:   #dc2626;
+  --led-cyan:  #0d9488;
+  --led-green-glow: 0 0 7px rgba(5,150,105,0.5);
+  --led-amber-glow: 0 0 7px rgba(217,119,6,0.5);
+  --led-red-glow:   0 0 7px rgba(220,38,38,0.5);
+  --led-cyan-glow:  0 0 7px rgba(13,148,136,0.5);
+
+  --shadow-sm: 0 1px 2px rgba(0,0,0,0.06);
+  --shadow-md: 0 3px 8px rgba(0,0,0,0.08);
+  --shadow-lg: 0 8px 24px rgba(0,0,0,0.12);
+
+  --tag-green-bg:  #d1fae5;  --tag-green-text:  #065f46;
+  --tag-teal-bg:   #ccfbf1;  --tag-teal-text:   #134e4a;
+  --tag-blue-bg:   #dbeafe;  --tag-blue-text:   #1e40af;
+  --tag-amber-bg:  #fef3c7;  --tag-amber-text:  #92400e;
+  --tag-orange-bg: #fef3c7;  --tag-orange-text: #92400e;
+  --tag-red-bg:    #fee2e2;  --tag-red-text:    #991b1b;
+  --tag-cyan-bg:   #cffafe;  --tag-cyan-text:   #155e75;
+}
+```
+
+**Color Rules:**
+- 所有颜色通过 CSS 变量引用，**禁止硬编码 hex**（登录页的动画装饰性元素除外）
+- 青色(`--accent`) 用于主要操作、活跃态、成功信号、链接
+- 琥珀色(`--accent2`) 用于警告、次要强调、装饰性数据标注，**不用于按钮主操作**
+- 同一视图内最多用一个强调色系
+- 侧边栏固定深色，不随主题切换
 
 ---
 
-## 4. Color Palette
+## 3. Typography Rules
 
-### Accent & Functional Colors
+```css
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+```
 
-| Role | Light Mode | Dark Mode | Variable |
-|------|-----------|-----------|----------|
-| **Accent** | `#0369a1` | `#38bdf8` | `--accent` |
-| **Accent-light** | `#0284c7` | `#7dd3fc` | `--accent-light` |
-| **Accent-dark** | `#075985` | `#0284c7` | `--accent-dark` |
-| **Success** | `#059669` | `#4ade80` | `--success` |
-| **Warning** | `#d97706` | `#fbbf24` | `--warning` |
-| **Danger** | `#dc2626` | `#f87171` | `--danger` |
-| **Info** | `#0891b2` | `#22d3ee` | `--info` |
-| **Purple** | `#7c3aed` | `#a78bfa` | `--purple` |
+| Role | Font | Size | Weight | Line Height | Letter Spacing |
+|------|------|------|--------|-------------|----------------|
+| 页面主标题 H1 | Outfit | 22–28px | 700 | 1.25 | -0.01em |
+| 章节标题 H2 | Outfit | 18–20px | 700 | 1.3 | -0.01em |
+| 卡片标题 H3/H4 | Outfit | 14–16px | 600 | 1.4 | 0 |
+| 正文 Body | Outfit | 14px | 400 | 1.7 | 0 |
+| 次要描述 | Outfit | 13px | 400 | 1.6 | 0 |
+| 导航标签 | Outfit | 14px | 500 | 1 | 0 |
+| 分组标签 | JetBrains Mono | 11px | 600 | 1 | 0.10em（大写） |
+| 数据值/指标 | JetBrains Mono | 14–28px | 600–700 | 1.2 | 0 |
+| 时间戳/ID | JetBrains Mono | 11–12px | 400 | 1 | 0.04em |
+| 终端/代码 | JetBrains Mono | 13px | 400 | 1.7 | 0 |
+| 按钮文字 | Outfit | 13–14px | 600 | 1 | 0.04em |
 
-### Text — 3 Opacity Levels (same base hue)
+**Typography Rules:**
+- 工业终端数据（节点数、百分比、时间戳）全部用 `var(--font-mono)`
+- 导航分组标签（工作区/监控/管理）用 `var(--font-mono)` 小大写
+- 正文中文行高 ≥ 1.7，`letter-spacing: 0.02em`
+- **NEVER use**: Inter、Roboto、Arial、系统默认 sans-serif 作为主字体
 
-| Level | Light Mode | Dark Mode | Variable |
-|-------|-----------|-----------|----------|
-| **Primary** | `#1a1a2e` | `rgba(230,230,240,1)` | `--text-primary` |
-| **Secondary** | `#4a4a68` | `rgba(230,230,240,0.65)` | `--text-secondary` |
-| **Muted** | `#7a7a8e` | `rgba(230,230,240,0.38)` | `--text-muted` |
-
-### Tag Colors — Solid Pairs (bg + text)
-
-**Light Mode** (light bg + dark text):
-
-| Tag | Background | Text | Variables |
-|-----|-----------|------|-----------|
-| Green | `#d1fae5` | `#065f46` | `--tag-green-bg` / `--tag-green-text` |
-| Blue | `#dbeafe` | `#1e40af` | `--tag-blue-bg` / `--tag-blue-text` |
-| Purple | `#ede9fe` | `#5b21b6` | `--tag-purple-bg` / `--tag-purple-text` |
-| Cyan | `#cffafe` | `#155e75` | `--tag-cyan-bg` / `--tag-cyan-text` |
-| Orange | `#fef3c7` | `#92400e` | `--tag-orange-bg` / `--tag-orange-text` |
-| Red | `#fee2e2` | `#991b1b` | `--tag-red-bg` / `--tag-red-text` |
-
-**Dark Mode** (dark bg + light text — inverted pairs):
-
-| Tag | Background | Text |
-|-----|-----------|------|
-| Green | `#064e3b` | `#6ee7b7` |
-| Blue | `#1e3a5f` | `#93c5fd` |
-| Purple | `#2e1065` | `#c4b5fd` |
-| Cyan | `#083344` | `#67e8f9` |
-| Orange | `#451a03` | `#fbbf24` |
-| Red | `#450a0a` | `#fca5a5` |
+**Text Decoration（标题渐变规则）：**
+- 登录页品牌大标题：`background-clip: text` 青→琥珀渐变 ✅（装饰性场景）
+- 主应用页面标题：纯色 `--text-primary`，无渐变 ❌
+- 数据卡片值：`--accent` 或 `--accent2`，无渐变
 
 ---
 
-## 5. Typography Rules
-
-**Font stack**: `'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif`
-
-**Monospace font**: `'JetBrains Mono', monospace` — used for data numbers, stats, IDs, timestamps, and code blocks in dark mode.
-
-**Anti-aliasing**: Always enable `-webkit-font-smoothing: antialiased`
-
-| Context | Size | Weight | Color |
-|---------|------|--------|-------|
-| Page title (header h2) | 16px | 600 | `--text-primary` |
-| Sidebar logo title | 14px | 600 | `--text-primary` |
-| Nav group label | 11px | 500 | `--text-muted` (uppercase, 0.6px letter-spacing) |
-| Nav item label | 13px | 500 | `--text-muted` (inactive), `--accent` (active) |
-| Card heading (h4) | 14px | 600 | `--text-primary` |
-| Body text | 14px–15px | 400 | `--text-primary` |
-| Data values / stats | 14px–28px | 600–700 | `--text-primary`, use `--font-mono` in dark mode |
-| Description / secondary | 13px | 400 | `--text-secondary` |
-| Timestamp / muted | 12px | 400 | `--text-muted` |
-| Tag / label | 12px | 500 | `--tag-*-text` (solid) |
-| Button text | 14px | 600 (primary), 500 (default) | white (primary), `--text-secondary` (default) |
-
-**Never**: Use font-weight below 400. Never use decorative or script fonts. Never use emoji as icon substitutes.
-
----
-
-## 6. Component Stylings
+## 4. Component Stylings
 
 ### Sidebar
+```css
+.sidebar {
+  width: 240px;
+  background: var(--sidebar-bg);
+  border-right: 1px solid var(--sidebar-border);
+  /* 固定深色，不跟主题变化 */
+}
+/* 顶部环境光 */
+.sidebar::before {
+  content: '';
+  position: absolute;
+  top: -40%; left: -20%;
+  width: 140%; height: 60%;
+  background: radial-gradient(ellipse, rgba(var(--accent-rgb),0.10) 0%, transparent 70%);
+  pointer-events: none;
+}
+/* Logo 区 */
+.logo-section {
+  padding: 20px 16px 16px;
+  display: flex; align-items: center; gap: 12px;
+  border-bottom: 1px solid var(--sidebar-border);
+}
+.logo-icon {
+  width: 36px; height: 36px;
+  background: var(--accent-gradient);
+  border-radius: var(--radius-sm);   /* 方正，4px */
+  box-shadow: 0 2px 8px rgba(var(--accent-rgb),0.3);
+}
+/* 导航分组标签 — JetBrains Mono */
+.nav-group-label {
+  font-family: var(--font-mono);
+  font-size: 10px; font-weight: 600;
+  letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--sidebar-text-muted);
+  padding: 18px 12px 6px;
+}
+/* 导航项 */
+.nav-item {
+  padding: 8px 12px;
+  border-radius: var(--radius-xs);  /* 2px，更方正 */
+  color: var(--sidebar-text-muted);
+  transition: background 0.15s, color 0.15s;
+  position: relative; overflow: hidden;
+}
+.nav-item::before {           /* 左侧激活轨道 */
+  content: '';
+  position: absolute; left: 0; top: 50%;
+  transform: translateY(-50%) scaleY(0);
+  width: 2px; height: 60%;
+  background: var(--accent);
+  box-shadow: var(--led-cyan-glow);
+  border-radius: 0 1px 1px 0;
+  transition: transform 0.2s;
+}
+.nav-item:hover { background: var(--sidebar-hover); color: var(--sidebar-text); }
+.nav-item:hover::before { transform: translateY(-50%) scaleY(0.5); }
+.nav-item.active { background: var(--sidebar-active); color: white; }
+.nav-item.active::before { transform: translateY(-50%) scaleY(1); }
+/* 底部状态 LED */
+.status-dot {
+  width: 6px; height: 6px;
+  background: var(--led-green);
+  box-shadow: var(--led-green-glow);
+  border-radius: 1px;          /* 方形 LED，非圆点 */
+  animation: led-pulse 2.5s ease-in-out infinite;
+}
+@keyframes led-pulse {
+  0%,100% { opacity: 0.7; }
+  50% { opacity: 1; }
+}
+```
 
-- Width: 260px (desktop), 60px (mobile)
-- Background: `--bg-primary` (solid)
-- Border-right: `--border-weak-line` (solid 1px)
-- No backdrop-filter, no glass
-- Logo section: icon (36x36, `--accent` bg, `--radius-sm` radius) + text
-- Nav items organized into groups with `.nav-group-label` divs:
-  - Workspace (智能对话, 集群仪表板)
-  - Monitor (集群配置, 钉钉配置)
-  - Admin (智能体管理, 技能配置, 用户管理)
-- Nav items: 6px 12px padding, `--radius-sm`, `--text-muted` color, 2px left border (transparent)
-- Nav hover: `--bg-hover` bg + `--text-primary` color
-- Nav active: `--bg-hover` bg + `border-left: 2px solid var(--accent)` + `--accent` text
-- Footer: static status dot (8px, `--success`, no animation) + "系统运行中"
-
-### Header (Top bar)
-
-- Height: 52px
-- Background: `--bg-primary` (solid)
-- Border-bottom: `--border-weak-line` (solid 1px)
-- No backdrop-filter, no glass
-- Theme toggle: `--radius-sm`, `--bg-hover` bg, active button gets `--accent` bg (solid)
-- User avatar: 24x24, `--accent` bg, `--radius-sm`, white initial letter
-- Dropdown: `--bg-secondary` bg, `--border-medium-line`, `--radius-md`, `--shadow-lg`
-
-### Card (`.card`)
-
-- Background: `--bg-primary` (solid)
-- Border: `--border-weak-line` (solid 1px)
-- Border-radius: `--radius-md` (6px)
-- No box-shadow — Grafana-style: border only, no shadow
-- No backdrop-filter, no glass, no glow, no hover lift
-
-### Dashboard Panel (`.card--panel`)
-
-- Background: `--bg-primary` (solid)
-- Border: `--border-medium-line` (solid 1px, slightly stronger than card)
-- Border-radius: `--radius-md` (6px)
-- No box-shadow
-
-### Stat Card (Dashboard)
-
-- Uses `.card--panel` base
-- Stat header: icon (18x18) + h4 + status badge
-- Stat row: label + bold value, use `--font-mono` for numbers in dark mode
-- Progress bar: `--accent` fill, `--bg-hover` track
-
-### Chat View
-
-- Messages box: `--bg-primary` bg, `--border-medium-line`, `--radius-md`
-- User bubble: `--accent` bg (solid), white text, `6px 6px 2px 6px` radius
-- Assistant bubble: `--bg-primary` bg, `--border-medium-line`, `6px 6px 6px 2px` radius
-- Process steps: `--bg-hover` bg, `--border-weak-line` border
-- Step indicators: `--tag-*-bg` solid backgrounds
-- Quick buttons: uniform `border-left: 3px solid var(--accent)`, no rainbow colors
-- Input box: `--bg-primary` bg, `--border-medium-line`, `--radius-md`
-
-### Login Page
-
-- Full-screen centered card
-- Background: `--bg-secondary` (solid, no gradient)
-- Card: `--bg-primary` bg, `--border-medium-line`, `--radius-lg` (8px), no blur
-- Logo: SVG with `currentColor` fill, no gradient
-- Tab indicator: `--accent` bg (solid), `--radius-sm`
-- Submit button: `--accent` bg (solid), hover → `--accent-dark`
+### Card
+```css
+.card {
+  background: var(--bg-primary);
+  border: var(--border-medium-line);
+  border-radius: var(--radius-sm);  /* 4px，工业感 */
+  padding: 20px;
+}
+/* 带左侧强调条的卡片 */
+.card-accent {
+  border-left: 2px solid var(--accent);
+}
+.card-accent-amber {
+  border-left: 2px solid var(--accent2);
+}
+/* hover */
+.card-hover:hover {
+  border-color: var(--border-accent);
+  box-shadow: 0 0 0 1px rgba(var(--accent-rgb),0.15);
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+```
 
 ### Buttons
+```css
+/* Primary */
+.btn-primary {
+  background: var(--accent-gradient);
+  border: none;
+  color: white;
+  border-radius: var(--radius-xs);  /* 2px */
+  padding: 8px 18px;
+  font-family: var(--font-body);
+  font-size: 13px; font-weight: 600;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  position: relative; overflow: hidden;
+  transition: box-shadow 0.2s;
+  box-shadow: 0 0 14px rgba(var(--accent-rgb),0.25);
+}
+.btn-primary::before {   /* 扫光 */
+  content: '';
+  position: absolute; top: 0; left: -100%;
+  width: 100%; height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.18), transparent);
+  animation: btn-sweep 2.5s linear infinite;
+}
+@keyframes btn-sweep { to { left: 100%; } }
+.btn-primary:hover { box-shadow: 0 0 22px rgba(var(--accent-rgb),0.45); }
+.btn-primary:active { transform: scale(0.98); }
+.btn-primary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.btn-primary:disabled { opacity: 0.4; cursor: not-allowed; }
 
-- Primary (`btn-primary` / `el-button--primary`): `--accent` bg (solid), white text, `--radius-sm`, hover → `--accent-dark` bg. No gradient, no brightness filter, no lift, no glow.
-- Default (`el-button--default`): `--bg-primary` bg, `--border-medium` border, `--text-secondary` text, `--radius-sm`, hover → accent border + accent text.
+/* Default */
+.btn-default {
+  background: transparent;
+  border: var(--border-medium-line);
+  color: var(--text-secondary);
+  border-radius: var(--radius-xs);
+  padding: 7px 16px;
+  font-size: 13px; font-weight: 500;
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s;
+}
+.btn-default:hover { border-color: var(--accent); color: var(--accent); }
+.btn-default:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.btn-default:disabled { opacity: 0.4; cursor: not-allowed; }
+
+/* Danger */
+.btn-danger {
+  background: transparent;
+  border: 1px solid rgba(var(--danger-rgb),0.4);
+  color: var(--danger);
+  border-radius: var(--radius-xs);
+  padding: 7px 16px;
+  font-size: 13px; font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.btn-danger:hover { background: rgba(var(--danger-rgb),0.1); }
+```
+
+### Navigation Header
+```css
+.top-header {
+  height: 54px;
+  background: var(--bg-primary);
+  border-bottom: var(--border-weak-line);
+  display: flex; align-items: center;
+  justify-content: space-between;
+  padding: 0 24px;
+}
+/* 页面标题 */
+.header-title {
+  font-family: var(--font-mono);
+  font-size: 13px; font-weight: 600;
+  letter-spacing: 0.10em; text-transform: uppercase;
+  color: var(--text-secondary);
+}
+.header-title::before {
+  content: '// ';
+  color: var(--accent);
+  opacity: 0.7;
+}
+/* 主题切换 */
+.theme-btn.active {
+  background: var(--accent-gradient);
+  box-shadow: 0 0 10px rgba(var(--accent-rgb),0.3);
+}
+/* 用户下拉 */
+.user-dropdown {
+  background: var(--bg-secondary);
+  border: var(--border-medium-line);  /* 修正：用 medium 不用已删除的 border-light */
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-lg);
+}
+```
 
 ### Tags / Badges
+```css
+.tag {
+  display: inline-flex; align-items: center;
+  padding: 2px 8px;
+  font-family: var(--font-mono);
+  font-size: 10.5px; font-weight: 500;
+  letter-spacing: 0.06em;
+  border-radius: var(--radius-xs);
+}
+.tag-green  { background: var(--tag-green-bg);  color: var(--tag-green-text); }
+.tag-teal   { background: var(--tag-teal-bg);   color: var(--tag-teal-text); }
+.tag-amber  { background: var(--tag-amber-bg);  color: var(--tag-amber-text); }
+.tag-red    { background: var(--tag-red-bg);    color: var(--tag-red-text); }
+.tag-cyan   { background: var(--tag-cyan-bg);   color: var(--tag-cyan-text); }
+```
 
-- All tags use solid background + solid text pairs (`--tag-*-bg` / `--tag-*-text`)
-- Dark mode uses inverted pairs (dark bg + light text)
-- Border-radius: `--radius-sm`
-- Font: 12px, 500 weight
-- No gradient tags, no rgba tinted backgrounds
+### Terminal Block（ChatView 专属）
+```css
+.term-wrap {
+  background: #0a0e14;               /* 终端固定深色，不跟主题 */
+  border: var(--border-accent-line);
+  border-radius: var(--radius-sm);
+  font-family: var(--font-mono);
+}
+/* 亮色模式下终端微调（不变色，只调整边框和光晕） */
+[data-theme="light"] .term-wrap {
+  border-color: rgba(13,148,136,0.35);
+  box-shadow: 0 0 30px rgba(13,148,136,0.06);
+}
+```
 
----
-
-## 7. Layout Principles
-
-**Overall structure**: Sidebar (260px) + Header (52px) + Main content area. Full viewport height, no page scrolling.
-
-**Sidebar**: Fixed left, vertical flex column — logo → grouped nav menu (flex-grow) → footer.
-
-**Main area**: Vertical flex — header → scrollable content (24px padding on `--bg-canvas`).
-
-**Grid**: Dashboard uses `el-row` / `el-col` with 16px gutter. 3-column layout.
-
-**Card spacing**: 16px gaps between grid items, 8px between list items.
-
-**Alignment**: Content always left-aligned. Center alignment only for login and empty states.
-
----
-
-## 8. Shadows
-
-### Light Mode
-
-| Level | Variable | Value | Usage |
-|-------|----------|-------|-------|
-| Small | `--shadow-sm` | `0 1px 3px rgba(0,0,0,0.06)` | Cards, buttons, tags |
-| Medium | `--shadow-md` | `0 2px 8px rgba(0,0,0,0.08)` | Dropdowns |
-| Large | `--shadow-lg` | `0 8px 24px rgba(0,0,0,0.12)` | Dialogs, poppers |
-
-### Dark Mode
-
-| Level | Variable | Value | Usage |
-|-------|----------|-------|-------|
-| Small | `--shadow-sm` | `0 1px 3px rgba(0,0,0,0.4)` | Cards, buttons |
-| Medium | `--shadow-md` | `0 2px 8px rgba(0,0,0,0.5)` | Dropdowns |
-| Large | `--shadow-lg` | `0 8px 24px rgba(0,0,0,0.6)` | Dialogs |
-
-**No glow shadows.** Shadows are flat gray — functional depth only.
-
-**No glass effects.** No `backdrop-filter`, no translucent backgrounds. All surfaces use solid backgrounds and solid borders.
-
----
-
-## 9. Radius Scale
-
-| Level | Variable | Value | Usage |
-|-------|----------|-------|-------|
-| Small | `--radius-sm` | `4px` | Buttons, inputs, tags, avatars |
-| Medium | `--radius-md` | `6px` | Cards, nav items, tool items, tables |
-| Large | `--radius-lg` | `8px` | Dialogs, login card |
-
-Never hardcode border-radius px values. Always use these variables.
+### LED Status Indicator
+```css
+.led {
+  display: inline-block;
+  width: 6px; height: 6px;
+  border-radius: 1px;  /* 方形 */
+}
+.led-green { background: var(--led-green); box-shadow: var(--led-green-glow); }
+.led-amber { background: var(--led-amber); box-shadow: var(--led-amber-glow); }
+.led-red   { background: var(--led-red);   box-shadow: var(--led-red-glow); }
+.led-cyan  { background: var(--led-cyan);  box-shadow: var(--led-cyan-glow); }
+/* 脉冲变体 */
+.led-pulse { animation: led-pulse 2.5s ease-in-out infinite; }
+```
 
 ---
 
-## 10. Elevation Hierarchy
+## 5. Layout Principles
 
-1. **Canvas** (`--bg-canvas`) — page background, the "floor"
-2. **Primary** (`--bg-primary`) — sidebar, header, cards — sits on canvas
-3. **Secondary** (`--bg-secondary`) — dropdowns, popovers, dialogs — floats above primary
-4. **Hover/Active** (`--bg-hover`/`--bg-active`) — interactive states on any surface
+**整体结构**: 侧边栏(240px 固定) + 竖向 flex（顶栏 54px + 可滚动内容区）
 
-Each tier is separated by ~6-8% brightness. No shadows needed for depth — the background staircase does it.
+**内容区**:
+- Max width: 不限制（仪表板类页面铺满，表单类页面 max-width: 720px）
+- Padding: `24px`（桌面），`16px`（移动）
+
+**间距梯度**:
+- `4px` 紧密元素内间距
+- `8px` 行内元素间距
+- `12px` 标签、图标与文字
+- `16px` 卡片 gap、网格 gutter
+- `24px` 页面 padding、section 分隔
+- `32px` 区块大间距
+
+**网格**:
+```css
+/* 仪表板三列 */
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+/* 卡片内容两列 */
+.card-grid-2 {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+```
 
 ---
 
-## 11. Do's and Don'ts
+## 6. Depth & Elevation
+
+| 层级 | 处理方式 | 使用场景 |
+|------|---------|---------|
+| Canvas | `--bg-canvas` 无阴影 | 页面背景 |
+| Surface | `--bg-primary` + `--border-weak-line` | 卡片、侧边栏 |
+| Elevated | `--bg-secondary` + `--shadow-md` | 下拉菜单、Popover |
+| Overlay | `--bg-solid` + `--shadow-lg` | Modal、Drawer |
+| Terminal | `#0a0e14` 固定（不随主题）+ `--border-accent-line` | ChatView 终端块 |
+| Login HUD | 多层叠加（背景 + 装饰层 + 内容层） | 登录页品牌面板 |
+
+**Elevation 规则**：工业风不依赖大阴影，靠边框颜色深度和背景层次区分深浅。
+
+---
+
+## 7. Animation & Interaction
+
+**Motion Philosophy**: 有目的的动效——状态切换用过渡，装饰性动效仅限登录页，主应用保持静止权威感
+
+**Tier**: L1（主应用），L2（登录页）
+
+### 基础 Hover & Focus
+```css
+/* 所有可交互元素的基础过渡 */
+* { transition-property: color, background-color, border-color, box-shadow, opacity, transform; transition-duration: 0.15s; }
+
+/* 焦点环 */
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+```
+
+### 页面切换动画（主应用）
+```css
+/* 主内容区路由切换 */
+.page-enter-active { animation: page-in 0.22s ease-out; }
+.page-leave-active { animation: page-out 0.15s ease-in; }
+
+@keyframes page-in {
+  from { opacity: 0; transform: translateX(8px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+@keyframes page-out {
+  from { opacity: 1; }
+  to   { opacity: 0; }
+}
+```
+
+### 入场动画（卡片/列表）
+```css
+.fade-in {
+  animation: fade-in 0.3s ease-out backwards;
+}
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+/* 错开延迟 */
+.fade-in:nth-child(1) { animation-delay: 0.05s; }
+.fade-in:nth-child(2) { animation-delay: 0.10s; }
+.fade-in:nth-child(3) { animation-delay: 0.15s; }
+```
+
+### 登录页专属动效（L2）
+```css
+/* 引导：boot-fade 启动序列 */
+@keyframes boot-fade {
+  from { opacity: 0; filter: blur(2px); }
+  to   { opacity: 1; filter: blur(0); }
+}
+/* 雷达旋转 */
+@keyframes radar-spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+/* CRT 水平扫描线 */
+@keyframes crt-sweep {
+  0%   { top: -3px; opacity: 0; }
+  10%  { opacity: 1; }
+  90%  { opacity: 1; }
+  100% { top: 100%; opacity: 0; }
+}
+/* 轨道旋转 */
+@keyframes orbit-rotate {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+```
+
+**登录页动画负载控制**（性能红线）：
+- 脉冲光环 ≤ 2 个（不是 3 个）
+- 星点 ≤ 12 个
+- 同时运行的 CSS animation 不超过 15 个
+- 轨道环 2 个即可，不需要 3 个
+
+### 减少动效降级
+```css
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+```
+
+---
+
+## 8. Do's and Don'ts
 
 ### Do
-
-- Always use CSS variables from `theme.css` — never hardcode colors
-- Use the 3-tier background staircase: canvas → primary → secondary for depth
-- Use the 3-level border opacity system: weak → medium → strong for visual weight
-- Use `.card` class for content panels (border only, no shadow — Grafana-style)
-- Use `.card--panel` for dashboard panels (slightly stronger border)
-- Use solid `--accent` for active states, primary buttons, avatars — no gradient
-- Use `--tag-*-bg` / `--tag-*-text` solid pairs for tags and badges — no rgba tinted backgrounds
-- Use `--radius-sm/md/lg` variables — never hardcode px
-- Use `--font-mono` (JetBrains Mono) for data numbers and stats in dark mode
-- Use `.nav-group-label` for grouping sidebar navigation items
-- Use static colored dots for status indicators — no pulse animation
-- Use `--bg-hover` for hover backgrounds — no accent-tinted rgba
-- Use Element Plus components with our CSS overrides
-- Ensure both light and dark mode variants for every new color/style
+- **用 CSS 变量**：所有颜色、圆角、阴影通过变量引用，装饰性动画颜色除外
+- **用 `--border-medium-line`**（不是已删除的 `--border-light`）作为通用卡片/弹层边框
+- **用方形 LED**（`border-radius: 1px`）替代圆形状态点，体现工业感
+- **用 `var(--font-mono)` 展示数据**：节点数、百分比、时间戳、ID、指标值
+- **用 `var(--font-mono)` 写导航分组标签**（大写 + letter-spacing: 0.14em）
+- **侧边栏激活项**用左侧 2px 竖条 + `var(--led-cyan-glow)` 代替背景块
+- **卡片圆角 `--radius-xs`（2px）或 `--radius-sm`（4px）**，保持工业方正感
+- **终端 ChatView 固定深色底** `#0a0e14`，不随主题变化（终端天然是黑的）
+- **页面切换**用轻量 CSS transition（translateX(8px) + opacity），不用跳变
+- **Header 页面标题**用 `// PAGE_TITLE` 格式加前缀，体现终端美学
 
 ### Don't
-
-- NEVER use `--gradient-primary` or any gradient on UI elements — it doesn't exist
-- NEVER use `backdrop-filter: blur()` or glass-morphism effects
-- NEVER use hover-lift transforms (`translateY`) on any element
-- NEVER use glow shadows (`--shadow-glow` or colored box-shadow glow) — they don't exist
-- NEVER use rgba-tinted backgrounds (the 12% opacity pattern) for tags/badges — use solid pairs
-- NEVER use entrance animations (`fade-in-up`, `delay-*`) — content just appears
-- NEVER use emoji as icon substitutes — use inline SVGs or text labels
-- NEVER use rainbow nth-child color coding — use uniform `--accent`
-- NEVER use `filter: brightness()` on hover effects
-- NEVER use `--bg-glass`, `--border-glass`, `--bg-card`, `--border-light` — they don't exist anymore
-- NEVER hardcode border-radius values — use `--radius-sm/md/lg` variables
-- NEVER add new theme colors without both light and dark mode variants
-- NEVER use box-shadow on cards — use border only (Grafana-style)
+- ❌ **禁止硬编码颜色**（`#7c3aed`、`#a78bfa` 等紫色已删除；主应用区域禁止直接写 hex）
+- ❌ **禁止 `backdrop-filter: blur()`** — 玻璃态已全部清除，不可引入
+- ❌ **禁止 `--border-light`** — 该变量不存在，用 `--border-weak-line` 或 `--border-medium-line`
+- ❌ **禁止 `--border-glass`、`--bg-glass`、`--bg-card`** — 已删除变量
+- ❌ **禁止在主应用卡片上加 `glow` 阴影** — glow 效果只属于登录页和 LED 指示器
+- ❌ **禁止 `translateY` hover 上浮** — 主应用页面卡片不做悬浮动效
+- ❌ **禁止随机/假数据指标** 出现在生产 UI 上（LoginPage 的 side-readout 使用随机值是设计特例，仅限登录页装饰）
+- ❌ **禁止 Emoji 图标** — 用内联 SVG
+- ❌ **禁止 rainbow 配色**（nth-child 彩虹色）— 用统一的 `--accent`
+- ❌ **登录页之外禁止 CRT/雷达/脉冲光环等装饰动效**
+- ❌ **禁止 Inter/Roboto/Arial 作主字体**
 
 ---
 
-## 12. Responsive Behavior
+## 9. Responsive Behavior
 
-| Breakpoint | Width | Changes |
-|------------|-------|---------|
-| Desktop | >768px | Full layout: 260px sidebar, 24px content padding |
-| Mobile | ≤768px | Collapsed sidebar (60px, icons only), no logo text, no nav labels, 16px padding |
+**Breakpoints:**
+
+| 断点 | 宽度 | 关键变化 |
+|------|------|---------|
+| Desktop | > 1180px | 完整布局，侧边栏读数可见 |
+| Laptop | 960–1180px | 侧边栏收纳装饰性元素 |
+| Tablet | 768–960px | 侧边栏折叠为图标模式(60px) |
+| Mobile | < 768px | 侧边栏图标模式，内容 16px padding |
+| Small | < 480px | 登录页单列堆叠，轨道环隐藏 |
+
+**Touch Targets**: 最小 44×44px
+
+**折叠策略**:
+- 侧边栏: 768px 以下折叠为 60px 图标条，标签隐藏
+- 登录页: 960px 以下左右分栏变上下堆叠，品牌区 min-height: 340px
+- ChatView: 480px 以下，prompt 前缀缩写，`[ 执行 ]` 按钮宽度固定 56px
+
+```css
+@media (max-width: 768px) {
+  .sidebar { width: 60px !important; }
+  .logo-text, .nav-label, .nav-group-label { display: none; }
+  .nav-item { justify-content: center; padding: 10px; }
+  .main-content { padding: 16px; }
+}
+@media (max-width: 960px) {
+  .login-page { flex-direction: column; }
+  .brand-panel { min-height: 340px; }
+  .form-panel { width: 100%; }
+}
+@media (max-width: 480px) {
+  .data-orbit { display: none; }
+  .data-card  { display: none; }
+  .side-readout { display: none; }
+}
+```
 
 ---
 
-## 13. Agent Prompt Guide
+## 10. Agent Prompt Guide（AI 编码约束）
 
-When generating UI code for this project, follow these directives:
-
-1. **Read `theme.css` first**. All colors, shadows, borders, and radius values come from CSS variables. Never hardcode any of these.
-
-2. **Use `data-theme="dark"` attribute** for dark mode. All dark overrides use this selector.
-
-3. **Use the 3-tier background staircase**. Every surface belongs to a tier:
-   - `--bg-canvas`: page background (deepest)
-   - `--bg-primary`: sidebar, panels, cards (mid)
-   - `--bg-secondary`: dropdowns, popovers, dialogs (elevated)
-
-4. **Use the 3-level border opacity system**. Every border belongs to a level:
-   - `--border-weak-line`: subtle inner dividers
-   - `--border-medium-line`: card borders, visible separation
-   - `--border-strong-line`: emphasis, focus rings
-
-5. **Use Element Plus components** with our CSS overrides in `theme.css`. Don't recreate with raw HTML.
-
-6. **Use `.card` class** for content panels: border only, no shadow (Grafana-style). Use `.card--panel` for dashboard panels with slightly stronger border.
-
-7. **Use solid `--accent` color** for active states, primary buttons, avatars. No gradients. Hover on primary buttons uses `--accent-dark`.
-
-8. **Spacing**: 8px tight gaps, 12px medium, 16px card gaps, 24px page padding.
-
-9. **Radius scale**: `--radius-sm` (4px) for buttons/inputs/tags, `--radius-md` (6px) for cards/nav, `--radius-lg` (8px) for dialogs. Never hardcode px values.
-
-10. **No animations**: Content appears immediately. No `fade-in-up`, no `delay-*`, no `pulse`, no bounce. Static status dots only.
-
-11. **SVG icons**: Inline SVGs with `viewBox="0 0 24 24"`, `stroke="currentColor"`, `stroke-width="2"`. All icons use `color: var(--accent)` uniformly — no rainbow per-item coloring.
-
-12. **Chinese text**: UI labels are Chinese. English for subtitles, technical terms, code.
-
-13. **Nav group labels**: Use `.nav-group-label` class (11px, uppercase, 0.6px letter-spacing) to organize sidebar navigation into logical groups.
-
-14. **Data values**: Use `.data-value` class or `--font-mono` for numbers, stats, IDs in dark mode.
-
-15. **New components**: Wrap in container, use `card` for panels, solid backgrounds from the 3-tier system, solid borders from the 3-level opacity system. Both light and dark mode must work via CSS variables.
-
-16. **Never skip dark mode**. Every new style must have `[data-theme="dark"]` values. Use solid `--bg-primary`/`--bg-secondary`/`--bg-hover` — never translucent rgba or glass effects.
+1. **读 `theme.css` 和本文件**再写代码，所有 token 来源于此
+2. **终端块**（ChatView、code block）固定 `background: #0a0e14`，不随主题变化
+3. **侧边栏**固定深色，不写 `[data-theme="light"]` 的侧边栏覆盖
+4. **圆角**：主应用卡片用 `--radius-xs`(2px) 或 `--radius-sm`(4px)；弹层用 `--radius-md`(6px)
+5. **数据值**用 `font-family: var(--font-mono)`；UI 文字用 `var(--font-body)`
+6. **状态点**用方形 LED（`border-radius: 1px`）+ `--led-*-glow`
+7. **边框**统一用 `--border-*-line` 变量；禁止 `--border-light`
+8. **页面切换**加 Vue `<Transition name="page">` + 对应 CSS
+9. **新组件**必须提供 dark + light 两个模式样式
+10. **Header 页面标题**格式：`// TITLE` 使用 `var(--font-mono)` + `--text-secondary`

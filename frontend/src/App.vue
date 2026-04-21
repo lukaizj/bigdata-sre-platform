@@ -73,8 +73,8 @@
 
         <div class="sidebar-footer">
           <div class="status-badge">
-            <span class="status-dot"></span>
-            <span>系统运行中</span>
+            <span class="status-led"></span>
+            <span>SYS::ONLINE</span>
           </div>
         </div>
       </el-aside>
@@ -83,7 +83,7 @@
       <el-container class="content-wrapper">
         <el-header class="top-header">
           <div class="header-left">
-            <h2>{{ currentPageTitle }}</h2>
+            <h2 class="page-title-mono">// {{ currentPageTitle.toUpperCase().replace(/\s+/g, '_') }}</h2>
           </div>
           <div class="header-right">
             <!-- 主题切换 -->
@@ -131,17 +131,18 @@
         </el-header>
 
         <el-main class="main-content">
-          <!-- 使用 KeepAlive 缓存组件，避免切换时重复加载 -->
-          <KeepAlive>
-            <ChatView v-if="activeMenu === 'chat'" />
-            <AgentManagement v-else-if="activeMenu === 'agents'" />
-            <SkillManagement v-else-if="activeMenu === 'skills'" />
-            <DingtalkConfig v-else-if="activeMenu === 'dingtalk'" />
-            <ClusterConfig v-else-if="activeMenu === 'config'" />
-            <ClusterDashboard v-else-if="activeMenu === 'dashboard'" />
-            <UserManagement v-else-if="activeMenu === 'users'" />
-            <UserGuide v-else-if="activeMenu === 'guide'" @navigate="activeMenu = $event" />
-          </KeepAlive>
+          <Transition name="page" mode="out-in">
+            <KeepAlive>
+              <ChatView v-if="activeMenu === 'chat'" />
+              <AgentManagement v-else-if="activeMenu === 'agents'" />
+              <SkillManagement v-else-if="activeMenu === 'skills'" />
+              <DingtalkConfig v-else-if="activeMenu === 'dingtalk'" />
+              <ClusterConfig v-else-if="activeMenu === 'config'" />
+              <ClusterDashboard v-else-if="activeMenu === 'dashboard'" />
+              <UserManagement v-else-if="activeMenu === 'users'" />
+              <UserGuide v-else-if="activeMenu === 'guide'" @navigate="activeMenu = $event" />
+            </KeepAlive>
+          </Transition>
         </el-main>
       </el-container>
     </el-container>
@@ -149,7 +150,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch, defineAsyncComponent } from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount, watch, defineAsyncComponent } from 'vue'
 import axios from 'axios'
 import { setTheme, initTheme } from './utils/theme'
 import { getAvatarChar } from './utils/avatar'
@@ -272,11 +273,20 @@ const checkAuth = async () => {
   }
 }
 
+const handleClickOutside = (e) => {
+  if (showUserMenu.value && !e.target.closest('.header-user')) {
+    showUserMenu.value = false
+  }
+}
+
 onMounted(() => {
-  // 初始化主题
   theme.value = initTheme()
-  // 检查登录状态
   checkAuth()
+  document.addEventListener('click', handleClickOutside)
+})
+
+onBeforeUnmount(() => {
+  document.removeEventListener('click', handleClickOutside)
 })
 </script>
 
@@ -351,9 +361,10 @@ onMounted(() => {
 }
 
 .logo-text span {
+  font-family: var(--font-mono);
   font-size: 10px;
   color: var(--sidebar-text-muted);
-  letter-spacing: 0.5px;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
 }
 
@@ -365,12 +376,14 @@ onMounted(() => {
 }
 
 .nav-group-label {
+  font-family: var(--font-mono);
   font-size: 10px;
   font-weight: 600;
-  letter-spacing: 1px;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--sidebar-text-muted);
   padding: 18px 12px 6px;
+  opacity: 0.65;
 }
 
 .nav-item {
@@ -382,13 +395,31 @@ onMounted(() => {
   cursor: pointer;
   margin-bottom: 2px;
   color: var(--sidebar-text-muted);
-  transition: all 0.15s ease;
+  transition: all 0.2s ease;
   position: relative;
+  overflow: hidden;
+}
+
+.nav-item::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%) scaleY(0);
+  width: 3px;
+  height: 60%;
+  background: var(--accent-gradient);
+  border-radius: 0 2px 2px 0;
+  transition: transform 0.25s ease;
 }
 
 .nav-item:hover {
   background: var(--sidebar-hover);
   color: var(--sidebar-text);
+}
+
+.nav-item:hover::before {
+  transform: translateY(-50%) scaleY(0.5);
 }
 
 .nav-item.active {
@@ -397,15 +428,7 @@ onMounted(() => {
 }
 
 .nav-item.active::before {
-  content: '';
-  position: absolute;
-  left: 0;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 3px;
-  height: 60%;
-  background: var(--accent-gradient);
-  border-radius: 0 2px 2px 0;
+  transform: translateY(-50%) scaleY(1);
 }
 
 .nav-icon {
@@ -420,7 +443,7 @@ onMounted(() => {
 }
 
 .nav-label {
-  font-size: 13px;
+  font-size: 15px;
   font-weight: 500;
 }
 
@@ -433,11 +456,42 @@ onMounted(() => {
 .status-badge {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   padding: 8px 12px;
   border-radius: var(--radius-sm);
-  font-size: 12px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.06em;
   color: var(--sidebar-text-muted);
+}
+
+.status-led {
+  width: 6px;
+  height: 6px;
+  border-radius: 1px;
+  background: #10b981;
+  box-shadow: 0 0 6px rgba(16, 185, 129, 0.8), 0 0 12px rgba(16, 185, 129, 0.4);
+  flex-shrink: 0;
+  animation: led-pulse 2.5s ease-in-out infinite;
+}
+
+/* Page transition */
+.page-enter-active,
+.page-leave-active {
+  transition: opacity 0.18s ease, transform 0.18s ease;
+}
+.page-enter-from {
+  opacity: 0;
+  transform: translateX(8px);
+}
+.page-leave-to {
+  opacity: 0;
+  transform: translateX(-4px);
+}
+
+@keyframes led-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.55; }
 }
 
 /* 用户头像 */
@@ -478,6 +532,15 @@ onMounted(() => {
   font-weight: 700;
   color: var(--text-primary);
   letter-spacing: -0.01em;
+}
+
+.page-title-mono {
+  font-family: var(--font-mono) !important;
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  color: var(--accent) !important;
+  letter-spacing: 0.08em !important;
+  opacity: 0.9;
 }
 
 .header-right {
@@ -531,7 +594,7 @@ onMounted(() => {
   right: 0;
   min-width: 150px;
   background: var(--bg-secondary);
-  border: var(--border-light);
+  border: var(--border-medium-line);
   border-radius: var(--radius-md);
   padding: 4px;
   box-shadow: var(--shadow-lg);

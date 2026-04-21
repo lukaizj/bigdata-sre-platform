@@ -138,8 +138,8 @@
           <span class="bc-chip">MISSION_ID / SRE-7741</span>
           <span class="bc-chip bc-chip-alt">MODE / OBSERVATION</span>
         </div>
-        <h2 class="brand-title"><span class="bt-slash">//</span> 让运维 <span class="bt-accent">更聪明</span> 一点</h2>
-        <p class="brand-sub">Big Data SRE · 实时洞察 · 智能告警 · 自动化处置</p>
+        <h2 class="brand-title"><span class="bt-slash">//</span> 运维从未<span class="bt-accent">如此简单</span></h2>
+        <p class="brand-sub">Big Data SRE · 智能 · 高效 · 自动化</p>
       </div>
     </div>
 
@@ -1261,11 +1261,38 @@ onBeforeUnmount(() => {
   border: 1px solid rgba(20,184,166,0.25);
   border-radius: 10px;
   transition: border-color .2s, box-shadow .2s, background .2s;
+  overflow: hidden;
+}
+.field-group::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 10px;
+  padding: 1px;
+  background: linear-gradient(135deg, #14b8a6, #5eead4, #14b8a6, #f59e0b);
+  background-size: 300% 300%;
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  opacity: 0;
+  transition: opacity .3s;
+  animation: border-flow 3s linear infinite;
+  pointer-events: none;
+}
+.field-group:focus-within::before {
+  opacity: 1;
 }
 .field-group:focus-within {
-  border-color: #14b8a6;
-  box-shadow: 0 0 0 3px rgba(20,184,166,.15), 0 0 15px rgba(20,184,166,0.2);
+  border-color: transparent;
+  box-shadow: 0 0 0 3px rgba(20,184,166,.15), 0 0 20px rgba(20,184,166,0.3);
   background: rgba(13,17,23,0.8);
+}
+
+@keyframes border-flow {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
 }
 .field-icon {
   width: 40px;
@@ -1339,6 +1366,17 @@ onBeforeUnmount(() => {
 }
 .submit-btn:active:not(:disabled) { transform: scale(0.98); }
 .submit-btn:disabled { opacity: .5; cursor: not-allowed; }
+.submit-btn.success {
+  background: linear-gradient(135deg, #059669 0%, #10b981 100%);
+  box-shadow: 0 0 30px rgba(16,185,129,0.5);
+}
+.submit-btn.success .btn-text { display: none; }
+.submit-btn.success .btn-success { display: flex; }
+
+.btn-success { display: none; align-items: center; gap: 6px; }
+.btn-success svg { width: 18px; height: 18px; }
+.btn-success svg path { stroke-dasharray: 20; stroke-dashoffset: 20; animation: check-draw 0.4s ease forwards 0.1s; }
+@keyframes check-draw { to { stroke-dashoffset: 0; } }
 
 @keyframes btn-sweep {
   to { left: 100%; }
@@ -1373,8 +1411,23 @@ onBeforeUnmount(() => {
   box-shadow: 0 10px 30px rgba(0,0,0,.18);
 }
 .toast svg { width: 18px; height: 18px; flex-shrink: 0; }
-.toast.error { background: linear-gradient(135deg,#ef4444,#dc2626); color: #fff; }
-.toast.success { background: linear-gradient(135deg,#10b981,#059669); color: #fff; }
+.toast.error { 
+  background: linear-gradient(135deg,#ef4444,#dc2626); 
+  color: #fff;
+  box-shadow: 0 10px 30px rgba(239,68,68,0.4), 0 0 20px rgba(239,68,68,0.2);
+  animation: toast-shake 0.5s ease;
+}
+.toast.success { 
+  background: linear-gradient(135deg,#10b981,#059669); 
+  color: #fff;
+  box-shadow: 0 10px 30px rgba(16,185,129,0.3);
+}
+
+@keyframes toast-shake {
+  0%, 100% { transform: translateX(-50%); }
+  10%, 30%, 50%, 70%, 90% { transform: translateX(calc(-50% - 6px)); }
+  20%, 40%, 60%, 80% { transform: translateX(calc(-50% + 6px)); }
+}
 
 .toast-fade-enter-active, .toast-fade-leave-active { transition: all .3s ease; }
 .toast-fade-enter-from, .toast-fade-leave-to {

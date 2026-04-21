@@ -164,7 +164,7 @@
           <!-- 用户消息 -->
           <template v-if="msg.role === 'user'">
             <div class="prompt-line">
-              <span class="pl-user">user@nexus</span><span class="pl-colon">:</span><span class="pl-path">~</span><span class="pl-dollar">$</span>
+              <span class="pl-user">></span>
               <span class="pl-text" v-html="formatMsg(msg.content)"></span>
             </div>
           </template>
@@ -228,7 +228,7 @@
 
       <div class="term-input">
         <span class="ti-prompt">
-          <span class="tp-user">user@nexus</span><span class="tp-colon">:</span><span class="tp-path">~</span><span class="tp-dollar">$</span>
+          <span class="tp-user">></span>
         </span>
         <textarea
           v-model="inputMsg"
