@@ -423,19 +423,28 @@ onMounted(async () => {
 }
 
 .page-header {
-  margin-bottom: 24px;
+  margin-bottom: 28px;
+  padding-bottom: 16px;
+  border-bottom: var(--border-weak-line);
 }
 
 .page-header h3 {
-  font-size: 24px;
+  font-family: var(--font-mono);
+  font-size: 11px;
   font-weight: 700;
-  color: var(--text-primary);
-  margin-bottom: 4px;
+  color: var(--accent);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  margin-bottom: 6px;
 }
 
+.page-header h3::before { content: '// '; opacity: 0.5; }
+
 .page-header p {
+  font-family: var(--font-mono);
+  font-size: 11px;
   color: var(--text-muted);
-  font-size: 14px;
+  letter-spacing: 0.04em;
 }
 
 /* 状态区域 */
@@ -452,10 +461,14 @@ onMounted(async () => {
 }
 
 .section-header h4 {
-  font-size: 18px;
-  font-weight: 600;
-  color: var(--text-primary);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-secondary);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
 }
+.section-header h4::before { content: '── '; color: var(--accent); opacity: 0.5; }
 
 .status-grid {
   display: grid;
@@ -468,13 +481,14 @@ onMounted(async () => {
   gap: 16px;
   padding: 20px;
   background: var(--bg-hover);
-  border-radius: var(--radius-md);
   border: var(--border-medium-line);
+  border-left: 3px solid var(--accent);
+  border-radius: 0 var(--radius-md) var(--radius-md) 0;
   transition: all 0.2s ease;
 }
 
 .status-card:hover {
-  border-color: var(--accent);
+  box-shadow: -2px 0 10px var(--accent-glow);
 }
 
 .status-info {

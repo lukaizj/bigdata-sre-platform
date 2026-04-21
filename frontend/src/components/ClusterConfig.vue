@@ -966,10 +966,14 @@ onMounted(() => {
 
 .section-title {
   margin-bottom: 20px;
-  font-size: 16px;
-  font-weight: 600;
-  color: var(--text-primary);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--accent);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
 }
+.section-title::before { content: '── '; opacity: 0.5; }
 
 .config-form {
   max-width: 800px;

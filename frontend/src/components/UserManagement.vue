@@ -500,19 +500,28 @@ onMounted(() => {
 }
 
 .page-header {
-  margin-bottom: 24px;
+  margin-bottom: 28px;
+  padding-bottom: 16px;
+  border-bottom: var(--border-weak-line);
 }
 
 .page-header h3 {
-  font-size: 24px;
+  font-family: var(--font-mono);
+  font-size: 11px;
   font-weight: 700;
-  color: var(--text-primary);
-  margin-bottom: 4px;
+  color: var(--accent);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  margin-bottom: 6px;
 }
 
+.page-header h3::before { content: '// '; opacity: 0.5; }
+
 .page-header p {
+  font-family: var(--font-mono);
+  font-size: 11px;
   color: var(--text-muted);
-  font-size: 14px;
+  letter-spacing: 0.04em;
 }
 
 /* 统计卡片 */

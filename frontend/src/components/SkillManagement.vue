@@ -581,9 +581,16 @@ onMounted(async () => {
 
 <style scoped>
 .skill-page { width: 100%; }
-.page-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; }
-.page-header h3 { font-size: 22px; font-weight: 700; color: var(--text-primary); margin-bottom: 2px; }
-.page-header p { font-size: 14px; color: var(--text-muted); }
+.page-header {
+  display: flex; justify-content: space-between; align-items: flex-start;
+  margin-bottom: 28px; padding-bottom: 16px; border-bottom: var(--border-weak-line);
+}
+.page-header h3 {
+  font-family: var(--font-mono); font-size: 11px; font-weight: 700;
+  color: var(--accent); letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 6px;
+}
+.page-header h3::before { content: '// '; opacity: 0.5; }
+.page-header p { font-family: var(--font-mono); font-size: 11px; color: var(--text-muted); letter-spacing: 0.04em; }
 .header-acts { display: flex; gap: 12px; align-items: center; }
 .mode-toggle { display: flex; background: var(--bg-hover); border-radius: var(--radius-sm); padding: 4px; }
 .mode-toggle button { padding: 8px 16px; border: none; background: none; color: var(--text-muted); cursor: pointer; border-radius: 8px; font-size: 13px; font-weight: 600; }
@@ -591,21 +598,32 @@ onMounted(async () => {
 
 /* Skills 目录信息 */
 .dirs-info { display: flex; gap: 12px; margin-bottom: 16px; flex-wrap: wrap; }
-.dir-card { display: flex; align-items: center; gap: 12px; padding: 12px 16px; background: var(--bg-primary); border: var(--border-medium-line); border-radius: var(--radius-sm); transition: all 0.2s ease; }
-.dir-card:hover { border-color: var(--accent); }
-.dir-status { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--text-muted); }
-.dir-path { font-size: 13px; color: var(--text-secondary); font-weight: 500; }
+.dir-card {
+  display: flex; align-items: center; gap: 12px; padding: 12px 16px;
+  background: var(--bg-primary); border: var(--border-medium-line);
+  border-left: 3px solid var(--accent); border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  transition: all 0.2s ease;
+}
+.dir-card:hover { box-shadow: -2px 0 8px var(--accent-glow); }
+.dir-status { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--text-muted); font-family: var(--font-mono); }
+.dir-path { font-family: var(--font-mono); font-size: 12px; color: var(--text-secondary); font-weight: 500; letter-spacing: 0.02em; }
 .dir-count { font-size: 12px; background: var(--tag-blue-bg); padding: 4px 8px; border-radius: var(--radius-sm); color: var(--tag-blue-text); }
 
 .skill-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 16px; }
-.skill-card { display: flex; gap: 16px; padding: 20px; background: var(--bg-primary); border: var(--border-medium-line); border-radius: var(--radius-md); cursor: pointer; transition: all 0.2s ease; }
-.skill-card:hover { border-color: var(--accent); }
+.skill-card {
+  display: flex; gap: 16px; padding: 20px;
+  background: var(--bg-primary); border: var(--border-medium-line);
+  border-left: 3px solid var(--accent);
+  border-radius: 0 var(--radius-md) var(--radius-md) 0;
+  cursor: pointer; transition: all 0.2s ease;
+}
+.skill-card:hover { box-shadow: -2px 0 12px var(--accent-glow), var(--shadow-md); transform: translateX(2px); }
 .skill-icon { width: 48px; height: 48px; background: var(--bg-hover); border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0; }
 .skill-info { flex: 1; }
 .skill-info h4 { font-size: 15px; font-weight: 600; color: var(--text-primary); margin-bottom: 4px; }
 .skill-info p { font-size: 13px; color: var(--text-muted); margin-bottom: 8px; line-height: 1.4; }
 .skill-meta { display: flex; gap: 8px; align-items: center; }
-.skill-id { font-size: 11px; color: var(--text-muted); background: var(--bg-hover); padding: 2px 6px; border-radius: var(--radius-sm); }
+.skill-id { font-family: var(--font-mono); font-size: 10px; color: var(--text-muted); background: var(--bg-hover); padding: 2px 6px; border-radius: 2px; letter-spacing: 0.04em; }
 
 .empty { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 60px; background: var(--bg-primary); border: var(--border-medium-line); border-radius: var(--radius-md); color: var(--text-muted); }
 .empty span { font-size: 40px; margin-bottom: 12px; opacity: .5; }
@@ -615,8 +633,8 @@ onMounted(async () => {
 .mcp-intro h4 { font-size: 18px; font-weight: 600; color: var(--text-primary); margin-bottom: 4px; }
 .mcp-intro p { font-size: 14px; color: var(--text-muted); }
 .mcp-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px; }
-.mcp-card { padding: 20px; background: var(--bg-hover); border-radius: 12px; text-align: center; border: 1px solid transparent; }
-.mcp-card.connected { border: 2px solid var(--accent); background: var(--tag-blue-bg); }
+.mcp-card { padding: 20px; background: var(--bg-hover); border-radius: 0 var(--radius-md) var(--radius-md) 0; text-align: center; border: var(--border-medium-line); border-left: 3px solid var(--border-medium); transition: all 0.2s ease; }
+.mcp-card.connected { border-left: 3px solid var(--accent); background: var(--tag-blue-bg); box-shadow: -2px 0 10px var(--accent-glow); }
 .mcp-status { display: flex; align-items: center; justify-content: center; gap: 6px; font-size: 12px; color: var(--text-muted); margin-bottom: 12px; }
 .mcp-icon { font-size: 16px; margin-bottom: 8px; }
 .mcp-card h4 { font-size: 15px; font-weight: 600; color: var(--text-primary); margin-bottom: 4px; }
