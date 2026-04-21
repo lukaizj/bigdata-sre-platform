@@ -506,23 +506,14 @@ onMounted(() => {
 }
 
 .page-header h3 {
-  font-family: var(--font-mono);
-  font-size: 11px;
-  font-weight: 700;
-  color: var(--accent);
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  margin-bottom: 6px;
+  font-size: 20px; font-weight: 700; color: var(--text-primary); margin-bottom: 4px;
 }
-
-.page-header h3::before { content: '// '; opacity: 0.5; }
-
-.page-header p {
-  font-family: var(--font-mono);
-  font-size: 11px;
-  color: var(--text-muted);
-  letter-spacing: 0.04em;
+.page-header h3::before {
+  content: '// ';
+  font-family: var(--font-mono); font-size: 12px; font-weight: 600;
+  color: var(--accent); vertical-align: middle; margin-right: 2px; opacity: 0.7;
 }
+.page-header p { font-size: 13px; color: var(--text-muted); }
 
 /* 统计卡片 */
 .stats-row {
