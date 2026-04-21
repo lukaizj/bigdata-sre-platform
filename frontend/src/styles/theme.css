@@ -365,12 +365,21 @@ body {
 .status-led-red { background: var(--led-red); box-shadow: var(--led-red-glow); }
 .status-led-amber { background: var(--led-amber); box-shadow: var(--led-amber-glow); }
 
-/* Status dot (legacy) */
+/* Status dot */
 .status-dot {
   width: 6px;
   height: 6px;
   border-radius: 1px;
-  background: var(--success);
+  background: var(--text-muted);
+  opacity: 0.4;
+  display: inline-block;
+  flex-shrink: 0;
+}
+.status-dot.active {
+  background: var(--led-green);
+  box-shadow: var(--led-green-glow);
+  opacity: 1;
+  animation: led-pulse 2.5s ease-in-out infinite;
 }
 
 /* Data font */

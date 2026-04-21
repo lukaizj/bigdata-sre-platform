@@ -42,10 +42,9 @@
       <!-- 脉冲光环 -->
       <div class="pulse-ring ring-1"></div>
       <div class="pulse-ring ring-2"></div>
-      <div class="pulse-ring ring-3"></div>
 
       <!-- 星点 -->
-      <div class="star" v-for="n in 18" :key="'s'+n" :style="starStyle(n)"></div>
+      <div class="star" v-for="n in 12" :key="'s'+n" :style="starStyle(n)"></div>
 
       <!-- 左侧纵向读数 -->
       <aside class="side-readout side-readout-l">
@@ -495,7 +494,7 @@ onBeforeUnmount(() => {
 .login-page {
   display: flex;
   min-height: 100vh;
-  font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Segoe UI', sans-serif;
+  font-family: 'Outfit', -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Segoe UI', sans-serif;
   background: #0a0e14;
   position: relative;
   padding-top: 32px;
@@ -830,7 +829,7 @@ onBeforeUnmount(() => {
   animation: boot-fade 0.8s ease-out 0.9s backwards;
 }
 .brand-title {
-  font-family: 'JetBrains Mono', 'DM Sans', sans-serif;
+  font-family: 'JetBrains Mono', 'Outfit', sans-serif;
   font-size: 28px;
   font-weight: 700;
   letter-spacing: 0.06em;

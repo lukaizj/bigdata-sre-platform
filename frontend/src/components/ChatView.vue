@@ -741,7 +741,7 @@ onMounted(async () => {
 
 .al-content {
   color: #c9d1d9;
-  font-family: 'DM Sans', -apple-system, sans-serif;
+  font-family: 'Outfit', -apple-system, sans-serif;
   font-size: 14px;
   line-height: 1.75;
   padding: 2px 0 4px;
