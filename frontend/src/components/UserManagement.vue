@@ -1,283 +1,400 @@
 <template>
-  <div class="user-management">
-    <!-- 普通用户：只显示个人信息卡片 -->
-    <template v-if="!isAdmin">
-      <div class="page-header">
-        <h3>个人中心</h3>
-        <p>管理您的账户信息</p>
+  <div class="bp-users">
+    <!-- ╭── Page Header · LoginPage title block ──╮ -->
+    <header class="bp-page-head">
+      <aside class="bp-margin-ruler">
+        <span class="bp-margin-tick" v-for="n in ['01','02','03','04','05']" :key="n">
+          <em>{{ n }}</em><i></i>
+        </span>
+      </aside>
+
+      <div class="bp-page-head-body">
+        <div class="bp-title-block">
+          <span class="bp-eyebrow">
+            <i class="bp-eyebrow-bar"></i>
+            <span>FIG.03 — {{ isAdmin ? 'ACCESS CONTROL' : 'PERSONAL PROFILE' }}</span>
+          </span>
+
+          <h1 class="bp-display-title">
+            <span class="bp-t-main">{{ isAdmin ? '用户' : '个人' }}</span>
+            <span class="bp-t-accent">{{ isAdmin ? 'USERS' : 'PROFILE' }}</span>
+            <span class="bp-t-mute">{{ isAdmin ? '/ ADMIN' : '/ ACCOUNT' }}</span>
+          </h1>
+
+          <div class="bp-dim">
+            <span class="bp-dim-arrow">◂</span>
+            <span class="bp-dim-line"></span>
+            <span class="bp-dim-num">{{ isAdmin ? String(users.length).padStart(3, '0') : 'SELF' }}</span>
+            <span class="bp-dim-line"></span>
+            <span class="bp-dim-arrow">▸</span>
+          </div>
+
+          <p class="bp-sub">{{ isAdmin ? '平台用户权限管理 — 分配角色、重置密码、审计登录记录。' : '查看并编辑个人账户信息 — 用户名、邮箱、登录密码。' }}</p>
+
+          <div class="bp-callouts">
+            <span class="bp-callout"><em>A</em><span>{{ isAdmin ? 'USER LIST' : 'PROFILE INFO' }}</span></span>
+            <span class="bp-callout is-amber"><em>B</em><span>{{ isAdmin ? 'ROLE CONTROL' : 'CREDENTIALS' }}</span></span>
+            <span class="bp-callout is-green"><em>C</em><span>{{ isAdmin ? 'AUDIT TRAIL' : 'LOGIN LOG' }}</span></span>
+          </div>
+        </div>
+
+        <!-- Revision stamp -->
+        <div class="bp-stamp">
+          <div class="bp-stamp-inner">
+            <span class="bp-stamp-check">✓</span>
+            <div class="bp-stamp-text">
+              <strong>{{ isAdmin ? 'AUDITED' : 'VERIFIED' }}</strong>
+              <small>SEC · {{ stampCode }}</small>
+            </div>
+          </div>
+        </div>
       </div>
+    </header>
 
-      <div class="profile-card card">
-        <div class="profile-header">
-          <div class="profile-avatar">{{ currentUser?.username?.charAt(0)?.toUpperCase() || 'U' }}</div>
-          <div class="profile-info">
-            <h4>{{ currentUser?.username }}</h4>
-            <span class="profile-email">{{ currentUser?.email }}</span>
+    <!-- ╭── 普通用户：个人信息 ──╮ -->
+    <section v-if="!isAdmin" class="bp-profile-section">
+      <div class="bp-profile-card">
+        <!-- Corner ticks -->
+        <span class="bp-card-tick-tl"></span>
+        <span class="bp-card-tick-tr"></span>
+        <span class="bp-card-tick-bl"></span>
+        <span class="bp-card-tick-br"></span>
+
+        <div class="bp-profile-head">
+          <div class="bp-profile-avatar">
+            <span>{{ getAvatarChar(currentUser) }}</span>
+          </div>
+          <div class="bp-profile-info">
+            <h4 class="bp-profile-name">{{ currentUser?.username }}</h4>
+            <span class="bp-profile-email">{{ currentUser?.email }}</span>
           </div>
         </div>
 
-        <div class="profile-details">
-          <div class="detail-item">
-            <span class="detail-label">角色</span>
-            <span class="detail-value">{{ currentUser?.role === 'admin' ? '管理员' : '普通用户' }}</span>
+        <div class="bp-profile-dets">
+          <div class="bp-det-row">
+            <span class="bp-det-k">01 角色</span>
+            <span class="bp-det-v">{{ currentUser?.role === 'admin' ? '管理员' : '普通用户' }}</span>
           </div>
-          <div class="detail-item">
-            <span class="detail-label">注册时间</span>
-            <span class="detail-value">{{ formatDate(currentUser?.created_at) }}</span>
+          <div class="bp-det-row">
+            <span class="bp-det-k">02 注册</span>
+            <span class="bp-det-v">{{ formatDate(currentUser?.created_at) }}</span>
           </div>
-          <div class="detail-item">
-            <span class="detail-label">最后登录</span>
-            <span class="detail-value">{{ formatDate(currentUser?.last_login) || '从未登录' }}</span>
+          <div class="bp-det-row">
+            <span class="bp-det-k">03 登录</span>
+            <span class="bp-det-v">{{ formatDate(currentUser?.last_login) || '从未登录' }}</span>
           </div>
         </div>
 
-        <div class="profile-actions">
-          <button class="btn-primary" @click="editProfile">
+        <div class="bp-profile-acts">
+          <button class="bp-btn-primary" @click="editProfile">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+              <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/>
+              <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/>
             </svg>
-            编辑资料
+            <span>编辑资料</span>
           </button>
-          <button class="btn-secondary" @click="changePassword">
+          <button class="bp-btn" @click="changePassword">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
-              <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+              <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+              <path d="M7 11V7a5 5 0 0110 0v4"/>
             </svg>
-            修改密码
+            <span>修改密码</span>
           </button>
         </div>
       </div>
-    </template>
+    </section>
 
-    <!-- 管理员：显示完整的用户管理界面 -->
-    <template v-else>
-      <div class="page-header">
-        <h3>用户管理</h3>
-        <p>管理系统用户账号和权限</p>
-      </div>
-
-      <!-- 统计卡片 -->
-      <div class="stats-row">
-        <div class="stat-card card stat-card-blue">
-          <div class="stat-icon">
+    <!-- ╭── 管理员：用户管理 ──╮ -->
+    <section v-else class="bp-admin-section">
+      <!-- Stats -->
+      <div class="bp-stats-row">
+        <div class="bp-stat-card bp-stat-cyan">
+          <span class="bp-stat-tick"></span>
+          <div class="bp-stat-icon">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-              <circle cx="9" cy="7" r="4"></circle>
-              <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
-              <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+              <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/>
+              <circle cx="9" cy="7" r="4"/>
+              <path d="M23 21v-2a4 4 0 00-3-3.87"/>
+              <path d="M16 3.13a4 4 0 010 7.75"/>
             </svg>
           </div>
-          <div class="stat-info">
-            <span class="stat-value">{{ users.length }}</span>
-            <span class="stat-label">总用户数</span>
-          </div>
+          <div class="bp-stat-val">{{ users.length }}</div>
+          <div class="bp-stat-lbl">总用户数</div>
         </div>
-        <div class="stat-card card stat-card-purple">
-          <div class="stat-icon">
+        <div class="bp-stat-card bp-stat-amber">
+          <span class="bp-stat-tick"></span>
+          <div class="bp-stat-icon">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M12 2L15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2z"></path>
+              <path d="M12 2L15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2z"/>
             </svg>
           </div>
-          <div class="stat-info">
-            <span class="stat-value">{{ adminCount }}</span>
-            <span class="stat-label">管理员</span>
-          </div>
+          <div class="bp-stat-val">{{ adminCount }}</div>
+          <div class="bp-stat-lbl">管理员</div>
         </div>
-        <div class="stat-card card stat-card-cyan">
-          <div class="stat-icon">
+        <div class="bp-stat-card bp-stat-green">
+          <span class="bp-stat-tick"></span>
+          <div class="bp-stat-icon">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-              <circle cx="12" cy="7" r="4"></circle>
+              <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/>
+              <circle cx="12" cy="7" r="4"/>
             </svg>
           </div>
-          <div class="stat-info">
-            <span class="stat-value">{{ userCount }}</span>
-            <span class="stat-label">普通用户</span>
-          </div>
+          <div class="bp-stat-val">{{ userCount }}</div>
+          <div class="bp-stat-lbl">普通用户</div>
         </div>
       </div>
 
-      <!-- 用户列表 -->
-      <div class="user-list card">
-        <div class="list-header">
-          <h4>用户列表</h4>
-          <div class="search-box">
-            <input
-              v-model="searchQuery"
-              placeholder="搜索用户名或邮箱..."
-              type="text"
-            />
+      <!-- User List -->
+      <div class="bp-list-panel">
+        <div class="bp-list-head">
+          <span class="bp-list-title">用户列表</span>
+          <div class="bp-search-box">
+            <input v-model="searchQuery" placeholder="搜索用户..." type="text" />
           </div>
         </div>
 
-        <div v-if="loading" class="loading-state">
-          <span class="spinner"></span>
+        <div v-if="loading" class="bp-loading">
+          <span class="bp-spinner"></span>
           <span>加载中...</span>
         </div>
 
-        <div v-else-if="filteredUsers.length === 0" class="empty-state">
-          <p>没有找到匹配的用户</p>
+        <div v-else-if="filteredUsers.length === 0" class="bp-empty">
+          <span class="bp-empty-code">[ NO_MATCH_FOUND ]</span>
+          <span>没有找到匹配的用户</span>
         </div>
 
-        <div v-else class="user-table">
-          <div class="table-header">
-            <div class="col-avatar">头像</div>
-            <div class="col-name">用户名</div>
-            <div class="col-email">邮箱</div>
-            <div class="col-role">角色</div>
-            <div class="col-date">注册时间</div>
-            <div class="col-login">最后登录</div>
-            <div class="col-actions">操作</div>
+        <div v-else class="bp-table">
+          <div class="bp-table-head">
+            <span class="bp-col-avatar">AV</span>
+            <span class="bp-col-name">用户名</span>
+            <span class="bp-col-email">邮箱</span>
+            <span class="bp-col-role">角色</span>
+            <span class="bp-col-date">注册</span>
+            <span class="bp-col-login">登录</span>
+            <span class="bp-col-acts">操作</span>
           </div>
 
           <div
-            v-for="user in filteredUsers"
-            :key="user.id"
-            class="table-row"
-            :class="{ 'is-current': user.id === currentUserId }"
+            v-for="u in filteredUsers"
+            :key="u.id"
+            class="bp-table-row"
+            :class="{ 'bp-is-current': u.id === currentUserId }"
           >
-            <div class="col-avatar">
-              <div class="avatar">{{ user.username?.charAt(0)?.toUpperCase() || 'U' }}</div>
+            <div class="bp-col-avatar">
+              <div class="bp-avatar">{{ getAvatarChar(u) }}</div>
             </div>
-            <div class="col-name">
-              <span class="username">{{ user.username }}</span>
-              <span v-if="user.id === currentUserId" class="badge-you">当前用户</span>
+            <div class="bp-col-name">
+              <span class="bp-name">{{ u.username }}</span>
+              <span v-if="u.id === currentUserId" class="bp-tag bp-tag-cyan">当前用户</span>
             </div>
-            <div class="col-email">{{ user.email }}</div>
-            <div class="col-role">
-              <span :class="['role-badge', user.role]">
-                {{ user.role === 'admin' ? '管理员' : '普通用户' }}
+            <div class="bp-col-email bp-mono">{{ u.email }}</div>
+            <div class="bp-col-role">
+              <span :class="['bp-role', u.role]">
+                {{ u.role === 'admin' ? '管理员' : '普通用户' }}
               </span>
             </div>
-            <div class="col-date">{{ formatDate(user.created_at) }}</div>
-            <div class="col-login">{{ formatDate(user.last_login) || '从未登录' }}</div>
-            <div class="col-actions">
-              <button class="btn-icon" @click="editUser(user)" title="编辑">
+            <div class="bp-col-date bp-mono">{{ formatDate(u.created_at) }}</div>
+            <div class="bp-col-login bp-mono">{{ formatDate(u.last_login) || '--' }}</div>
+            <div class="bp-col-acts">
+              <button class="bp-btn-icon" @click="editUser(u)" title="编辑">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                  <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/>
+                  <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/>
                 </svg>
               </button>
               <button
-                v-if="user.id !== currentUserId"
-                class="btn-icon danger"
-                @click="confirmDelete(user)"
+                v-if="u.id !== currentUserId"
+                class="bp-btn-icon bp-btn-danger"
+                @click="confirmDelete(u)"
                 title="删除"
               >
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <polyline points="3 6 5 6 21 6"></polyline>
-                  <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                  <polyline points="3 6 5 6 21 6"/>
+                  <path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/>
                 </svg>
               </button>
             </div>
           </div>
         </div>
       </div>
-    </template>
+    </section>
 
-    <!-- 编辑用户弹窗 -->
-    <el-dialog v-model="editDialogVisible" title="编辑用户" width="520px">
-      <el-form :model="editForm" label-position="top">
-        <el-form-item label="用户名">
-          <el-input v-model="editForm.username" placeholder="用户名" />
-        </el-form-item>
-        <el-form-item label="角色">
-          <el-select v-model="editForm.role" style="width: 100%" @change="onRoleChange">
+    <!-- ╭── 编辑用户弹窗 ──╮ -->
+    <el-dialog v-model="editDialogVisible" width="520px" class="bp-dialog">
+      <template #header>
+        <div class="bp-dialog-head">
+          <span class="bp-dialog-k">EDIT</span>
+          <span class="bp-dialog-v">编辑用户</span>
+        </div>
+      </template>
+
+      <el-form :model="editForm" label-position="top" class="bp-form">
+        <div class="bp-field">
+          <label class="bp-label">
+            <span class="bp-label-k">01</span>
+            <span class="bp-label-v">用户名 · USERNAME</span>
+          </label>
+          <div class="bp-input-wrap">
+            <input v-model="editForm.username" type="text" placeholder="请输入用户名" class="bp-input" />
+          </div>
+        </div>
+
+        <div class="bp-field">
+          <label class="bp-label">
+            <span class="bp-label-k">02</span>
+            <span class="bp-label-v">角色 · ROLE</span>
+          </label>
+          <el-select v-model="editForm.role" style="width: 100%" @change="onRoleChange" class="bp-select">
             <el-option label="管理员" value="admin" />
             <el-option label="普通用户" value="user" />
           </el-select>
-        </el-form-item>
-        <el-form-item label="重置密码">
-          <el-input
-            v-model="editForm.password"
-            type="password"
-            placeholder="留空则不修改密码"
-            show-password
-          />
-        </el-form-item>
+        </div>
 
-        <!-- 权限配置（仅非管理员用户显示） -->
-        <el-form-item v-if="editForm.role === 'user'" label="可访问的功能模块">
-          <div class="permissions-grid">
+        <div class="bp-field">
+          <label class="bp-label">
+            <span class="bp-label-k">03</span>
+            <span class="bp-label-v">密码 · PASSWORD</span>
+          </label>
+          <div class="bp-input-wrap">
+            <input v-model="editForm.password" type="password" placeholder="留空则不修改密码" class="bp-input" />
+          </div>
+        </div>
+
+        <div v-if="editForm.role === 'user'" class="bp-field">
+          <label class="bp-label">
+            <span class="bp-label-k">04</span>
+            <span class="bp-label-v">权限 · PERMISSIONS</span>
+          </label>
+          <div class="bp-perms-grid">
             <el-checkbox
-              v-for="module in availableModules"
-              :key="module.key"
+              v-for="m in availableModules"
+              :key="m.key"
               v-model="editForm.permissions"
-              :label="module.key"
+              :label="m.key"
             >
-              {{ module.label }}
+              {{ m.label }}
             </el-checkbox>
           </div>
-          <div class="permissions-tip">
-            未勾选的模块将对该用户隐藏
+          <span class="bp-perms-tip">未勾选的模块将对该用户隐藏</span>
+        </div>
+      </el-form>
+
+      <template #footer>
+        <div class="bp-dialog-footer">
+          <button class="bp-btn" @click="editDialogVisible = false">取消</button>
+          <button class="bp-btn-primary" @click="saveUser">
+            <span>保存</span>
+            <span class="bp-btn-arrow">▸</span>
+          </button>
+        </div>
+      </template>
+    </el-dialog>
+
+    <!-- ╭── 删除确认弹窗 ──╮ -->
+    <el-dialog v-model="deleteDialogVisible" width="420px" class="bp-dialog">
+      <template #header>
+        <div class="bp-dialog-head">
+          <span class="bp-dialog-k">DELETE</span>
+          <span class="bp-dialog-v">确认删除</span>
+        </div>
+      </template>
+
+      <div class="bp-confirm-body">
+        <p class="bp-confirm-msg">确定要删除用户 <strong>{{ deleteUser?.username }}</strong> 吗？</p>
+        <p class="bp-confirm-tip">此操作不可恢复</p>
+      </div>
+
+      <template #footer>
+        <div class="bp-dialog-footer">
+          <button class="bp-btn" @click="deleteDialogVisible = false">取消</button>
+          <button class="bp-btn-danger" @click="handleDelete">
+            <span>确认删除</span>
+          </button>
+        </div>
+      </template>
+    </el-dialog>
+
+    <!-- ╭── 修改密码弹窗 ──╮ -->
+    <el-dialog v-model="passwordDialogVisible" width="420px" class="bp-dialog">
+      <template #header>
+        <div class="bp-dialog-head">
+          <span class="bp-dialog-k">PASSWORD</span>
+          <span class="bp-dialog-v">修改密码</span>
+        </div>
+      </template>
+
+      <el-form :model="passwordForm" label-position="top" class="bp-form">
+        <div class="bp-field">
+          <label class="bp-label">
+            <span class="bp-label-k">01</span>
+            <span class="bp-label-v">当前密码 · OLD</span>
+          </label>
+          <div class="bp-input-wrap">
+            <input v-model="passwordForm.oldPassword" type="password" placeholder="请输入当前密码" class="bp-input" />
           </div>
-        </el-form-item>
+        </div>
+
+        <div class="bp-field">
+          <label class="bp-label">
+            <span class="bp-label-k">02</span>
+            <span class="bp-label-v">新密码 · NEW</span>
+          </label>
+          <div class="bp-input-wrap">
+            <input v-model="passwordForm.newPassword" type="password" placeholder="至少6位字符" class="bp-input" />
+          </div>
+        </div>
+
+        <div class="bp-field">
+          <label class="bp-label">
+            <span class="bp-label-k">03</span>
+            <span class="bp-label-v">确认密码 · CONFIRM</span>
+          </label>
+          <div class="bp-input-wrap">
+            <input v-model="passwordForm.confirmPassword" type="password" placeholder="请再次输入新密码" class="bp-input" />
+          </div>
+        </div>
       </el-form>
+
       <template #footer>
-        <el-button @click="editDialogVisible = false">取消</el-button>
-        <el-button type="primary" @click="saveUser">保存</el-button>
+        <div class="bp-dialog-footer">
+          <button class="bp-btn" @click="passwordDialogVisible = false">取消</button>
+          <button class="bp-btn-primary" @click="savePassword">
+            <span>确认修改</span>
+            <span class="bp-btn-arrow">▸</span>
+          </button>
+        </div>
       </template>
     </el-dialog>
 
-    <!-- 删除确认弹窗 -->
-    <el-dialog v-model="deleteDialogVisible" title="确认删除" width="400px">
-      <p style="text-align: center; font-size: 15px;">
-        确定要删除用户 <strong>{{ deleteUser?.username }}</strong> 吗？
-      </p>
-      <p style="text-align: center; color: var(--text-muted); font-size: 13px;">
-        此操作不可恢复
-      </p>
-      <template #footer>
-        <el-button @click="deleteDialogVisible = false">取消</el-button>
-        <el-button type="danger" @click="handleDelete">确认删除</el-button>
+    <!-- ╭── 编辑资料弹窗 ──╮ -->
+    <el-dialog v-model="profileDialogVisible" width="420px" class="bp-dialog">
+      <template #header>
+        <div class="bp-dialog-head">
+          <span class="bp-dialog-k">PROFILE</span>
+          <span class="bp-dialog-v">编辑资料</span>
+        </div>
       </template>
-    </el-dialog>
 
-    <!-- 普通用户：修改密码弹窗 -->
-    <el-dialog v-model="passwordDialogVisible" title="修改密码" width="400px">
-      <el-form :model="passwordForm" label-position="top">
-        <el-form-item label="当前密码">
-          <el-input
-            v-model="passwordForm.oldPassword"
-            type="password"
-            placeholder="请输入当前密码"
-            show-password
-          />
-        </el-form-item>
-        <el-form-item label="新密码">
-          <el-input
-            v-model="passwordForm.newPassword"
-            type="password"
-            placeholder="请输入新密码（至少6位）"
-            show-password
-          />
-        </el-form-item>
-        <el-form-item label="确认新密码">
-          <el-input
-            v-model="passwordForm.confirmPassword"
-            type="password"
-            placeholder="请再次输入新密码"
-            show-password
-          />
-        </el-form-item>
+      <el-form :model="profileForm" label-position="top" class="bp-form">
+        <div class="bp-field">
+          <label class="bp-label">
+            <span class="bp-label-k">01</span>
+            <span class="bp-label-v">用户名 · USERNAME</span>
+          </label>
+          <div class="bp-input-wrap">
+            <input v-model="profileForm.username" type="text" placeholder="请输入用户名" class="bp-input" />
+          </div>
+        </div>
       </el-form>
-      <template #footer>
-        <el-button @click="passwordDialogVisible = false">取消</el-button>
-        <el-button type="primary" @click="savePassword">确认修改</el-button>
-      </template>
-    </el-dialog>
 
-    <!-- 普通用户：编辑资料弹窗 -->
-    <el-dialog v-model="profileDialogVisible" title="编辑资料" width="400px">
-      <el-form :model="profileForm" label-position="top">
-        <el-form-item label="用户名">
-          <el-input v-model="profileForm.username" placeholder="用户名" />
-        </el-form-item>
-      </el-form>
       <template #footer>
-        <el-button @click="profileDialogVisible = false">取消</el-button>
-        <el-button type="primary" @click="saveProfile">保存</el-button>
+        <div class="bp-dialog-footer">
+          <button class="bp-btn" @click="profileDialogVisible = false">取消</button>
+          <button class="bp-btn-primary" @click="saveProfile">
+            <span>保存</span>
+            <span class="bp-btn-arrow">▸</span>
+          </button>
+        </div>
       </template>
     </el-dialog>
   </div>
@@ -287,6 +404,8 @@
 import { ref, computed, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import axios from 'axios'
+import { getAvatarChar } from '../utils/avatar'
+import { STORAGE_KEYS } from '../utils/constants'
 
 const loading = ref(false)
 const users = ref([])
@@ -294,8 +413,8 @@ const searchQuery = ref('')
 const currentUserId = ref('')
 const currentUser = ref(null)
 const isAdmin = ref(false)
+const stampCode = `${new Date().getFullYear()}Q${Math.ceil((new Date().getMonth() + 1) / 3)}`
 
-// 可配置的功能模块（不含用户管理，因为普通用户只能管理自己）
 const availableModules = [
   { key: 'guide', label: '使用说明' },
   { key: 'chat', label: '智能对话' },
@@ -316,7 +435,6 @@ const editForm = ref({
 })
 const deleteUser = ref(null)
 
-// 普通用户的弹窗和表单
 const passwordDialogVisible = ref(false)
 const profileDialogVisible = ref(false)
 const passwordForm = ref({
@@ -347,9 +465,7 @@ const formatDate = (date) => {
 }
 
 const loadUsers = async () => {
-  // 只有管理员才加载用户列表
   if (!isAdmin.value) return
-
   loading.value = true
   try {
     const res = await axios.get('/api/auth/users')
@@ -362,7 +478,7 @@ const loadUsers = async () => {
 }
 
 const loadCurrentUser = () => {
-  const user = localStorage.getItem('user')
+  const user = localStorage.getItem(STORAGE_KEYS.USER)
   if (user) {
     try {
       const userData = JSON.parse(user)
@@ -385,7 +501,6 @@ const editUser = (user) => {
 }
 
 const onRoleChange = (role) => {
-  // 切换到管理员时清空权限配置
   if (role === 'admin') {
     editForm.value.permissions = []
   }
@@ -400,11 +515,9 @@ const saveUser = async () => {
     if (editForm.value.password) {
       data.password = editForm.value.password
     }
-    // 非管理员用户才保存权限配置
     if (editForm.value.role === 'user') {
       data.permissions = editForm.value.permissions
     }
-
     await axios.put(`/api/auth/users/${editForm.value.id}`, data)
     ElMessage.success('保存成功')
     editDialogVisible.value = false
@@ -430,7 +543,6 @@ const handleDelete = async () => {
   }
 }
 
-// 普通用户：编辑资料
 const editProfile = () => {
   profileForm.value = {
     username: currentUser.value?.username || ''
@@ -444,18 +556,14 @@ const saveProfile = async () => {
       username: profileForm.value.username
     })
     ElMessage.success('资料已更新')
-
-    // 更新本地存储
     currentUser.value.username = profileForm.value.username
-    localStorage.setItem('user', JSON.stringify(currentUser.value))
-
+    localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(currentUser.value))
     profileDialogVisible.value = false
   } catch (err) {
     ElMessage.error(err.response?.data?.error || '更新失败')
   }
 }
 
-// 普通用户：修改密码
 const changePassword = () => {
   passwordForm.value = {
     oldPassword: '',
@@ -470,12 +578,10 @@ const savePassword = async () => {
     ElMessage.error('两次输入的新密码不一致')
     return
   }
-
   if (passwordForm.value.newPassword.length < 6) {
     ElMessage.error('新密码至少需要6个字符')
     return
   }
-
   try {
     await axios.put('/api/auth/password', {
       oldPassword: passwordForm.value.oldPassword,
@@ -495,431 +601,554 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.user-management {
+.bp-users {
   width: 100%;
+  animation: bp-fade 0.4s ease-out;
 }
 
-.page-header {
-  margin-bottom: 28px;
-  padding-bottom: 16px;
-  border-bottom: var(--border-weak-line);
+/* ╭── Page Header ──╮ */
+/* page-head base styles inherited from global blueprint.css */
+
+/* ╭── Profile Card (普通用户) ──╮ */
+.bp-profile-section {
+  padding: 4px;
 }
 
-.page-header h3 {
-  font-size: 20px; font-weight: 700; color: var(--text-primary); margin-bottom: 4px;
-}
-.page-header h3::before {
-  content: '// ';
-  font-family: var(--font-mono); font-size: 12px; font-weight: 600;
-  color: var(--accent); vertical-align: middle; margin-right: 2px; opacity: 0.7;
-}
-.page-header p { font-size: 13px; color: var(--text-muted); }
-
-/* 统计卡片 */
-.stats-row {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 16px;
-  margin-bottom: 24px;
-}
-
-.stat-card {
-  padding: 20px;
-  display: flex;
-  align-items: center;
-  gap: 16px;
-}
-
-.stat-icon {
-  width: 48px;
-  height: 48px;
-  border-radius: var(--radius-md);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: var(--bg-hover);
-}
-.stat-icon svg {
-  width: 24px;
-  height: 24px;
-  color: var(--accent);
-}
-.stat-card-blue .stat-icon svg {
-  color: var(--accent);
-}
-.stat-card-purple .stat-icon svg {
-  color: var(--accent2);
-}
-.stat-card-cyan .stat-icon svg {
-  color: var(--info);
-}
-
-.stat-info {
-  display: flex;
-  flex-direction: column;
-}
-
-.stat-value {
-  font-size: 28px;
-  font-weight: 700;
-  color: var(--text-primary);
-}
-
-.stat-label {
-  font-size: 13px;
-  color: var(--text-muted);
-}
-
-/* 用户列表 */
-.user-list {
-  padding: 24px;
-}
-
-.list-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 20px;
-}
-
-.list-header h4 {
-  font-size: 18px;
-  font-weight: 600;
-  color: var(--text-primary);
-}
-
-.search-box input {
-  padding: 10px 16px;
-  border: var(--border-medium-line);
-  border-radius: var(--radius-sm);
-  background: var(--bg-hover);
-  color: var(--text-primary);
-  font-size: 14px;
-  width: 240px;
-  transition: all 0.2s ease;
-}
-
-.search-box input:focus {
-  outline: none;
-  border-color: var(--accent);
-  background: var(--bg-primary);
-}
-
-/* 表格 */
-.user-table {
-  border: var(--border-medium-line);
-  border-radius: var(--radius-md);
-  overflow: hidden;
-}
-
-.table-header {
-  display: grid;
-  grid-template-columns: 60px 1fr 1.5fr 120px 120px 120px 100px;
-  gap: 16px;
-  padding: 14px 20px;
-  background: var(--bg-hover);
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--text-muted);
-}
-
-.table-row {
-  display: grid;
-  grid-template-columns: 60px 1fr 1.5fr 120px 120px 120px 100px;
-  gap: 16px;
-  padding: 16px 20px;
-  border-top: var(--border-weak-line);
-  align-items: center;
-  font-size: 14px;
-  transition: background 0.2s ease;
-}
-
-.table-row:hover {
-  background: var(--bg-hover);
-}
-
-.table-row.is-current {
-  background: var(--bg-hover);
-}
-
-.avatar {
-  width: 40px;
-  height: 40px;
-  background: var(--accent);
-  border-radius: var(--radius-sm);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: white;
-  font-weight: 600;
-  font-size: 16px;
-}
-
-.username {
-  font-weight: 600;
-  color: var(--text-primary);
-}
-
-.badge-you {
-  display: inline-block;
-  margin-left: 8px;
-  padding: 2px 8px;
-  background: var(--tag-blue-bg);
-  color: var(--tag-blue-text);
-  border-radius: var(--radius-sm);
-  font-size: 11px;
-}
-
-.col-email {
-  color: var(--text-secondary);
-}
-
-.role-badge {
-  display: inline-block;
-  padding: 4px 10px;
-  border-radius: var(--radius-sm);
-  font-size: 12px;
-}
-
-.role-badge.admin {
-  background: var(--tag-orange-bg);
-  color: var(--tag-orange-text);
-}
-
-.role-badge.user {
-  background: var(--bg-hover);
-  color: var(--text-muted);
-}
-
-.col-date, .col-login {
-  color: var(--text-muted);
-  font-size: 13px;
-}
-
-.col-actions {
-  display: flex;
-  gap: 8px;
-}
-
-.btn-icon {
-  width: 32px;
-  height: 32px;
-  border: none;
-  background: var(--bg-hover);
-  border-radius: var(--radius-sm);
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--text-muted);
-  transition: all 0.2s ease;
-}
-
-.btn-icon:hover {
-  background: var(--bg-hover);
-  color: var(--accent);
-}
-
-.btn-icon.danger:hover {
-  background: var(--tag-red-bg);
-  color: var(--danger);
-}
-
-.btn-icon svg {
-  width: 16px;
-  height: 16px;
-}
-
-/* 加载和空状态 */
-.loading-state, .empty-state {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 60px;
-  color: var(--text-muted);
-  gap: 12px;
-}
-
-.spinner {
-  width: 24px;
-  height: 24px;
-  border: 2px solid var(--border-medium);
-  border-top-color: var(--accent);
-  border-radius: 50%;
-  animation: spin 0.8s linear infinite;
-}
-
-.empty-state span {
-  font-size: 40px;
-}
-
-/* 权限配置 */
-.permissions-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 8px;
-  padding: 12px;
-  background: var(--bg-hover);
-  border-radius: var(--radius-sm);
-  margin-top: 8px;
-}
-
-.permissions-grid :deep(.el-checkbox) {
-  margin-right: 0;
-  padding: 8px 12px;
-  background: var(--bg-primary);
-  border-radius: var(--radius-sm);
-  transition: all 0.2s ease;
-}
-
-.permissions-grid :deep(.el-checkbox:hover) {
-  background: var(--bg-hover);
-}
-
-.permissions-grid :deep(.el-checkbox.is-checked) {
-  background: var(--tag-blue-bg);
-}
-
-.permissions-tip {
-  font-size: 12px;
-  color: var(--text-muted);
-  margin-top: 8px;
-}
-
-/* 普通用户：个人中心样式 */
-.profile-card {
-  max-width: 500px;
+.bp-profile-card {
+  position: relative;
+  max-width: 520px;
   padding: 32px;
+  background: linear-gradient(180deg, rgba(14, 29, 49, 0.8) 0%, rgba(10, 23, 38, 0.9) 100%);
+  border: 1px solid rgba(92, 228, 255, 0.25);
 }
 
-.profile-header {
+.bp-card-tick-tl, .bp-card-tick-tr, .bp-card-tick-bl, .bp-card-tick-br {
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  border: 1px solid rgba(92, 228, 255, 0.3);
+}
+
+.bp-card-tick-tl { top: -1px; left: -1px; border-right: none; border-bottom: none; }
+.bp-card-tick-tr { top: -1px; right: -1px; border-left: none; border-bottom: none; }
+.bp-card-tick-bl { bottom: -1px; left: -1px; border-right: none; border-top: none; }
+.bp-card-tick-br { bottom: -1px; right: -1px; border-left: none; border-top: none; }
+
+.bp-profile-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(92, 228, 255, 0.4), transparent);
+}
+
+.bp-profile-head {
   display: flex;
   align-items: center;
   gap: 20px;
   margin-bottom: 24px;
   padding-bottom: 24px;
-  border-bottom: var(--border-weak-line);
+  border-bottom: 1px dashed rgba(92, 228, 255, 0.15);
 }
 
-.profile-avatar {
+.bp-profile-avatar {
   width: 72px;
   height: 72px;
-  background: var(--accent);
-  border-radius: var(--radius-lg);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: white;
-  font-weight: 700;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--bp-blueprint);
+  background: var(--bp-blueprint);
+  color: var(--bp-ink);
+  font-family: var(--bp-fnt-display);
   font-size: 28px;
+  font-weight: 900;
 }
 
-.profile-info h4 {
-  font-size: 22px;
+.bp-profile-info { flex: 1; }
+
+.bp-profile-name {
+  font-family: var(--bp-fnt-mono);
+  font-size: 18px;
   font-weight: 700;
-  color: var(--text-primary);
-  margin-bottom: 4px;
+  color: var(--bp-chalk);
+  margin-bottom: 6px;
+  letter-spacing: 0.04em;
 }
 
-.profile-email {
-  font-size: 14px;
-  color: var(--text-muted);
+.bp-profile-email {
+  font-family: var(--bp-fnt-mono);
+  font-size: 13px;
+  color: var(--bp-chalk-dim);
+  opacity: 0.7;
 }
 
-.profile-details {
+.bp-profile-dets {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 10px;
   margin-bottom: 24px;
 }
 
-.detail-item {
+.bp-det-row {
   display: flex;
   justify-content: space-between;
-  padding: 12px 16px;
-  background: var(--bg-hover);
-  border-radius: var(--radius-sm);
+  padding: 14px 18px;
+  background: rgba(92, 228, 255, 0.05);
+  border: 1px solid rgba(92, 228, 255, 0.1);
 }
 
-.detail-label {
+.bp-det-k {
+  font-family: var(--bp-fnt-mono);
+  font-size: 11px;
+  color: var(--bp-chalk-dim);
+  letter-spacing: 0.1em;
+}
+
+.bp-det-v {
+  font-family: 'Hanken Grotesk', 'PingFang SC', sans-serif;
   font-size: 14px;
-  color: var(--text-muted);
+  color: var(--bp-chalk);
 }
 
-.detail-value {
-  font-size: 14px;
-  font-weight: 500;
-  color: var(--text-primary);
-}
-
-.profile-actions {
+.bp-profile-acts {
   display: flex;
   gap: 12px;
 }
 
-.btn-primary,
-.btn-secondary {
-  flex: 1;
+/* ╭── Admin Stats ──╮ */
+.bp-stats-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.bp-stat-card {
+  position: relative;
+  padding: 20px 24px;
+  background: rgba(14, 29, 49, 0.6);
+  border: 1px solid rgba(92, 228, 255, 0.2);
   display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.bp-stat-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(92, 228, 255, 0.3), transparent);
+}
+
+.bp-stat-tick {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 6px;
+  height: 6px;
+  border: 1px solid currentColor;
+  opacity: 0.4;
+}
+
+.bp-stat-cyan .bp-stat-tick { color: var(--bp-blueprint); }
+.bp-stat-amber .bp-stat-tick { color: var(--bp-amber); }
+.bp-stat-green .bp-stat-tick { color: var(--bp-green-check); }
+
+.bp-stat-icon {
+  width: 40px;
+  height: 40px;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(92, 228, 255, 0.15);
+  background: rgba(92, 228, 255, 0.06);
+}
+
+.bp-stat-icon svg {
+  width: 20px;
+  height: 20px;
+}
+
+.bp-stat-cyan .bp-stat-icon svg { color: var(--bp-blueprint); }
+.bp-stat-amber .bp-stat-icon svg { color: var(--bp-amber); }
+.bp-stat-green .bp-stat-icon svg { color: var(--bp-green-check); }
+
+.bp-stat-val {
+  font-family: var(--bp-fnt-display);
+  font-size: 32px;
+  font-weight: 900;
+  color: var(--bp-chalk);
+}
+
+.bp-stat-lbl {
+  font-family: var(--bp-fnt-mono);
+  font-size: 11px;
+  color: var(--bp-chalk-dim);
+  letter-spacing: 0.12em;
+}
+
+/* ╭── User List Panel ──╮ */
+.bp-list-panel {
+  padding: 24px;
+  background: rgba(14, 29, 49, 0.6);
+  border: 1px solid rgba(92, 228, 255, 0.2);
+}
+
+.bp-list-head {
+  display: flex;
+  justify-content: space-between;
   align-items: center;
-  justify-content: center;
-  gap: 8px;
-  padding: 14px 20px;
-  border-radius: var(--radius-md);
-  font-size: 15px;
-  font-weight: 500;
-  cursor: pointer;
+  margin-bottom: 20px;
+  padding-bottom: 16px;
+  border-bottom: 1px dashed rgba(92, 228, 255, 0.15);
+}
+
+.bp-list-title {
+  font-family: var(--bp-fnt-mono);
+  font-size: 12px;
+  color: var(--bp-blueprint);
+  font-weight: 700;
+  letter-spacing: 0.1em;
+}
+
+.bp-search-box input {
+  padding: 10px 16px;
+  border: 1px solid rgba(92, 228, 255, 0.15);
+  background: rgba(92, 228, 255, 0.05);
+  color: var(--bp-chalk);
+  font-family: var(--bp-fnt-mono);
+  font-size: 13px;
+  width: 240px;
   transition: all 0.2s ease;
 }
 
-.btn-primary {
-  background: var(--accent);
+.bp-search-box input:focus {
+  outline: none;
+  border-color: var(--bp-blueprint);
+  background: rgba(92, 228, 255, 0.08);
+  box-shadow: 0 0 12px rgba(92, 228, 255, 0.2);
+}
+
+.bp-search-box input::placeholder {
+  color: var(--bp-chalk-dim);
+  opacity: 0.5;
+}
+
+/* ╭── Table ──╮ */
+.bp-table {
+  border: 1px solid rgba(92, 228, 255, 0.15);
+}
+
+.bp-table-head {
+  display: grid;
+  grid-template-columns: 60px 1.2fr 1.5fr 100px 120px 120px 80px;
+  gap: 12px;
+  padding: 14px 20px;
+  background: rgba(92, 228, 255, 0.06);
+  font-family: var(--bp-fnt-mono);
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--bp-chalk-dim);
+  letter-spacing: 0.08em;
+  border-bottom: 1px solid rgba(92, 228, 255, 0.15);
+}
+
+.bp-table-row {
+  display: grid;
+  grid-template-columns: 60px 1.2fr 1.5fr 100px 120px 120px 80px;
+  gap: 12px;
+  padding: 16px 20px;
+  border-top: 1px solid rgba(92, 228, 255, 0.08);
+  align-items: center;
+  font-family: 'Hanken Grotesk', 'PingFang SC', sans-serif;
+  font-size: 14px;
+  transition: background 0.2s ease;
+}
+
+.bp-table-row:hover {
+  background: rgba(92, 228, 255, 0.05);
+}
+
+.bp-is-current {
+  background: rgba(92, 228, 255, 0.08);
+}
+
+.bp-avatar {
+  width: 36px;
+  height: 36px;
+  display: grid;
+  place-items: center;
+  background: var(--bp-blueprint);
+  color: var(--bp-ink);
+  font-weight: 700;
+  font-size: 14px;
+}
+
+.bp-name {
+  font-weight: 600;
+  color: var(--bp-chalk);
+}
+
+.bp-mono {
+  font-family: var(--bp-fnt-mono);
+  font-size: 12px;
+  color: var(--bp-chalk-dim);
+}
+
+.bp-role {
+  display: inline-block;
+  padding: 4px 10px;
+  font-family: var(--bp-fnt-mono);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+}
+
+.bp-role.admin {
+  background: rgba(245, 166, 35, 0.15);
+  color: var(--bp-amber);
+}
+
+.bp-role.user {
+  background: rgba(92, 228, 255, 0.06);
+  color: var(--bp-chalk-dim);
+}
+
+.bp-col-acts {
+  display: flex;
+  gap: 8px;
+}
+
+.bp-btn-icon {
+  width: 32px;
+  height: 32px;
+  border: 1px solid rgba(92, 228, 255, 0.15);
+  background: transparent;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  color: var(--bp-chalk-dim);
+  transition: all 0.2s ease;
+}
+
+.bp-btn-icon:hover {
+  background: rgba(92, 228, 255, 0.08);
+  color: var(--bp-blueprint);
+  border-color: var(--bp-blueprint);
+}
+
+.bp-btn-icon.bp-btn-danger:hover {
+  background: rgba(255, 74, 60, 0.1);
+  color: var(--bp-red-stamp);
+  border-color: var(--bp-red-stamp);
+}
+
+.bp-btn-icon svg {
+  width: 16px;
+  height: 16px;
+}
+
+/* ╭── Loading & Empty ──╮ */
+.bp-loading, .bp-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 60px;
+  color: var(--bp-chalk-dim);
+}
+
+.bp-spinner {
+  width: 24px;
+  height: 24px;
+  border: 2px solid rgba(92, 228, 255, 0.2);
+  border-top-color: var(--bp-blueprint);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+.bp-empty-code {
+  font-family: var(--bp-fnt-mono);
+  font-size: 11px;
+  color: var(--bp-blueprint);
+  letter-spacing: 0.14em;
+  opacity: 0.6;
+}
+
+/* ╭── Dialog ──╮ */
+.bp-dialog-head {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  padding-bottom: 12px;
+  border-bottom: 1px dashed rgba(92, 228, 255, 0.2);
+}
+
+.bp-dialog-k {
+  font-family: var(--bp-fnt-mono);
+  font-size: 10px;
+  color: var(--bp-chalk-dim);
+  letter-spacing: 0.2em;
+}
+
+.bp-dialog-v {
+  font-family: var(--bp-fnt-mono);
+  font-size: 13px;
+  color: var(--bp-blueprint);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+
+.bp-dialog-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding-top: 16px;
+  border-top: 1px dashed rgba(92, 228, 255, 0.2);
+}
+
+.bp-btn-arrow {
+  margin-left: 4px;
+  opacity: 0.7;
+}
+
+/* ╭── Confirm Dialog ──╮ */
+.bp-confirm-body {
+  text-align: center;
+  padding: 20px 0;
+}
+
+.bp-confirm-msg {
+  font-size: 15px;
+  color: var(--bp-chalk);
+  margin-bottom: 8px;
+}
+
+.bp-confirm-msg strong {
+  color: var(--bp-blueprint);
+}
+
+.bp-confirm-tip {
+  font-family: var(--bp-fnt-mono);
+  font-size: 12px;
+  color: var(--bp-chalk-dim);
+  opacity: 0.6;
+}
+
+/* ╭── Form ──╮ */
+.bp-form {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.bp-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.bp-label {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.bp-label-k {
+  font-family: var(--bp-fnt-mono);
+  font-size: 10px;
+  color: var(--bp-amber);
+  letter-spacing: 0.1em;
+}
+
+.bp-label-v {
+  font-family: var(--bp-fnt-mono);
+  font-size: 12px;
+  color: var(--bp-chalk);
+  letter-spacing: 0.06em;
+}
+
+.bp-input-wrap {
+  padding: 8px 4px;
+  border: 1px solid rgba(92, 228, 255, 0.15);
+  background: rgba(92, 228, 255, 0.05);
+  transition: all 0.2s ease;
+}
+
+.bp-input-wrap:focus-within {
+  border-color: var(--bp-blueprint);
+  background: rgba(92, 228, 255, 0.08);
+  box-shadow: 0 0 12px rgba(92, 228, 255, 0.2);
+}
+
+.bp-input {
+  width: 100%;
+  background: transparent;
   border: none;
-  color: white;
+  outline: none;
+  font-family: var(--bp-fnt-mono);
+  font-size: 13px;
+  color: var(--bp-chalk);
 }
 
-.btn-primary:hover {
-  opacity: 0.9;
+.bp-input::placeholder {
+  color: var(--bp-chalk-dim);
+  opacity: 0.5;
 }
 
-.btn-secondary {
-  background: var(--bg-hover);
-  border: var(--border-medium-line);
-  color: var(--text-secondary);
+/* ╭── Permissions ──╮ */
+.bp-perms-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  padding: 12px;
+  background: rgba(92, 228, 255, 0.05);
 }
 
-.btn-secondary:hover {
-  background: var(--bg-primary);
-  color: var(--text-primary);
+.bp-perms-grid :deep(.el-checkbox) {
+  margin-right: 0;
+  padding: 8px 12px;
+  background: rgba(14, 29, 49, 0.6);
+  transition: all 0.2s ease;
 }
 
-.btn-primary svg,
-.btn-secondary svg {
-  width: 18px;
-  height: 18px;
+.bp-perms-grid :deep(.el-checkbox:hover) {
+  background: rgba(92, 228, 255, 0.08);
 }
 
-/* 响应式 */
+.bp-perms-grid :deep(.el-checkbox.is-checked) {
+  background: rgba(92, 228, 255, 0.12);
+}
+
+.bp-perms-tip {
+  font-family: var(--bp-fnt-mono);
+  font-size: 11px;
+  color: var(--bp-chalk-dim);
+  margin-top: 8px;
+  opacity: 0.6;
+}
+
+/* ╭── Animations ──╮ */
+@keyframes bp-fade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ╭── Responsive ──╮ */
 @media (max-width: 1024px) {
-  .stats-row {
-    grid-template-columns: 1fr;
+  .bp-stats-row { grid-template-columns: 1fr; }
+  .bp-table-head, .bp-table-row {
+    grid-template-columns: 60px 1fr 100px 80px;
   }
+  .bp-col-email, .bp-col-date, .bp-col-login { display: none; }
+  .bp-perms-grid { grid-template-columns: repeat(2, 1fr); }
+}
 
-  .table-header, .table-row {
-    grid-template-columns: 60px 1fr 120px 80px;
-  }
-
-  .col-email, .col-date, .col-login {
-    display: none;
-  }
-
-  .permissions-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-
-  .profile-actions {
-    flex-direction: column;
-  }
+@media (max-width: 768px) {
+  .bp-profile-acts { flex-direction: column; }
+  .bp-search-box input { width: 100%; }
+  .bp-list-panel { padding: 16px; }
 }
 </style>

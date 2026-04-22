@@ -1,230 +1,269 @@
 <template>
-  <div class="dingtalk-page">
-    <div class="page-header">
-      <h3>钉钉配置</h3>
-      <p>配置钉钉机器人接入智能体对话</p>
-    </div>
-
-    <!-- 状态卡片 -->
-    <div class="status-section card">
-      <div class="section-header">
-        <h4>
-          服务状态
-        </h4>
-        <el-button size="small" @click="refreshStatus" :loading="refreshing">
-          刷新
-        </el-button>
-      </div>
-
-      <div class="status-grid">
-        <div class="status-card">
-          <div class="status-info">
-            <h5>连接状态</h5>
-            <span :class="['status-badge', connectionStatus]">
-              {{ statusLabel }}
-            </span>
-          </div>
-        </div>
-
-        <div class="status-card">
-          <div class="status-info">
-            <h5>消息统计</h5>
-            <div class="message-stats">
-              <span class="stat-item">消息数: {{ messageCount }}</span>
-            </div>
-          </div>
-        </div>
-
-        <div class="status-card">
-          <div class="status-info">
-            <h5>当前智能体</h5>
-            <span class="agent-name">{{ currentAgentName || '未配置' }}</span>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- 配置表单 -->
-    <div class="config-section card">
-      <div class="section-header">
-        <h4>
-          基础配置
-        </h4>
-        <el-button type="primary" size="small" @click="saveConfig" :loading="saving">
-          保存配置
-        </el-button>
-      </div>
-
-      <el-form :model="config" label-position="top" class="config-form">
-        <el-row :gutter="20">
-          <el-col :span="12">
-            <el-form-item label="Client ID" required>
-              <el-input
-                v-model="config.clientId"
-                placeholder="钉钉应用的 Client ID"
-              />
-            </el-form-item>
-          </el-col>
-          <el-col :span="12">
-            <el-form-item label="Client Secret" required>
-              <el-input
-                v-model="config.clientSecret"
-                type="password"
-                show-password
-                placeholder="钉钉应用的 Client Secret"
-              />
-            </el-form-item>
-          </el-col>
-        </el-row>
-
-        <el-row :gutter="20">
-          <el-col :span="12">
-            <el-form-item label="默认智能体">
-              <el-select v-model="config.defaultAgentId" placeholder="选择默认智能体" style="width: 100%">
-                <el-option
-                  v-for="agent in agents"
-                  :key="agent.id"
-                  :label="agent.name"
-                  :value="agent.id"
-                />
-              </el-select>
-            </el-form-item>
-          </el-col>
-          <el-col :span="12">
-            <el-form-item label="启用状态">
-              <el-switch v-model="config.enabled" />
-            </el-form-item>
-          </el-col>
-        </el-row>
-      </el-form>
-
-      <div class="test-section">
-        <el-button @click="testConnection" :loading="testing">
-          测试连接
-        </el-button>
-        <span v-if="testResult" :class="['test-result', testResult.success ? 'success' : 'error']">
-          {{ testResult.message }}
+  <div class="bp-dingtalk">
+    <!-- ╭── Page Header · LoginPage title block ──╮ -->
+    <header class="bp-page-head">
+      <aside class="bp-margin-ruler">
+        <span class="bp-margin-tick" v-for="n in ['01','02','03','04','05']" :key="n">
+          <em>{{ n }}</em><i></i>
         </span>
-      </div>
-    </div>
+      </aside>
 
-    <!-- 智能体映射配置 -->
-    <div class="mapping-section card">
-      <div class="section-header">
-        <h4>
-          智能体映射
-        </h4>
-        <el-button type="primary" size="small" @click="showAddMappingDialog">
-          添加映射
-        </el-button>
-      </div>
+      <div class="bp-page-head-body">
+        <div class="bp-title-block">
+          <span class="bp-eyebrow">
+            <i class="bp-eyebrow-bar"></i>
+            <span>FIG.06 — DINGTALK BRIDGE</span>
+          </span>
 
-      <div class="mapping-description">
-        为不同的钉钉会话/群聊配置专属智能体，未配置的会话将使用默认智能体
-      </div>
+          <h1 class="bp-display-title">
+            <span class="bp-t-main">钉钉</span>
+            <span class="bp-t-accent">BRIDGE</span>
+            <span class="bp-t-mute">/ MESSAGE HUB</span>
+          </h1>
 
-      <div v-if="mappings.length > 0" class="mapping-list">
-        <div v-for="mapping in mappings" :key="mapping.conversationId" class="mapping-item">
-          <div class="mapping-info">
-            <div class="mapping-id">
-              <span class="label">会话ID:</span>
-              <span class="value">{{ mapping.conversationId }}</span>
-            </div>
-            <div class="mapping-agent">
-              <span class="label">智能体:</span>
-              <span class="value">{{ mapping.agentName }}</span>
+          <div class="bp-dim">
+            <span class="bp-dim-arrow">◂</span>
+            <span class="bp-dim-line"></span>
+            <span class="bp-dim-num">{{ statusLabel || 'STANDBY' }}</span>
+            <span class="bp-dim-line"></span>
+            <span class="bp-dim-arrow">▸</span>
+          </div>
+
+          <p class="bp-sub">配置钉钉机器人消息通道 — 将 AI 智能体响应桥接到企业群组，运维事件实时推送。</p>
+
+          <div class="bp-callouts">
+            <span class="bp-callout"><em>A</em><span>CONNECTION</span></span>
+            <span class="bp-callout is-amber"><em>B</em><span>AGENT MAPPING</span></span>
+            <span class="bp-callout is-green"><em>C</em><span>LIVE MESSAGES</span></span>
+          </div>
+
+          <!-- Handwritten annotation -->
+          <div class="bp-note">
+            <svg class="bp-note-arrow" viewBox="0 0 80 40" aria-hidden="true">
+              <path d="M 2 38 Q 25 30, 40 18 T 76 4" fill="none" stroke="currentColor" stroke-width="1.2" stroke-dasharray="2 3"/>
+              <path d="M 72 2 L 76 4 L 74 8" fill="none" stroke="currentColor" stroke-width="1.2"/>
+            </svg>
+            <span class="bp-note-text">keep AppKey/Secret safe —</span>
+          </div>
+        </div>
+
+        <!-- Revision stamp -->
+        <div class="bp-stamp">
+          <div class="bp-stamp-inner is-blue">
+            <span class="bp-stamp-check">●</span>
+            <div class="bp-stamp-text">
+              <strong>{{ connectionStatus === 'connected' ? 'ONLINE' : 'OFFLINE' }}</strong>
+              <small>BRIDGE · REV.02</small>
             </div>
           </div>
-          <el-button
-            type="danger"
-            size="small"
-            text
-            @click="deleteMapping(mapping.conversationId)"
-          >
-            删除
-          </el-button>
         </div>
       </div>
-      <div v-else class="empty-mapping">
-        <p>暂无智能体映射，点击"添加映射"按钮创建</p>
-      </div>
-    </div>
+    </header>
 
-    <!-- 使用说明 -->
-    <div class="guide-section card">
-      <div class="section-header">
-        <h4>
-          使用说明
-        </h4>
+    <!-- ╭── Status Panel ──╮ -->
+    <section class="bp-status-panel">
+      <div class="bp-panel-head">
+        <span class="bp-panel-title">服务状态</span>
+        <button class="bp-btn" @click="refreshStatus" :disabled="refreshing">
+          {{ refreshing ? '刷新中...' : '刷新' }}
+        </button>
       </div>
 
-      <div class="guide-content">
-        <div class="guide-step">
-          <div class="step-number">1</div>
-          <div class="step-content">
+      <div class="bp-status-grid">
+        <div class="bp-stat-box">
+          <span class="bp-stat-k">01 连接</span>
+          <span :class="['bp-stat-v', connectionStatus]">{{ statusLabel }}</span>
+        </div>
+        <div class="bp-stat-box">
+          <span class="bp-stat-k">02 消息</span>
+          <span class="bp-stat-v">{{ messageCount }}</span>
+        </div>
+        <div class="bp-stat-box">
+          <span class="bp-stat-k">03 智能体</span>
+          <span class="bp-stat-v">{{ currentAgentName || '未配置' }}</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ╭── Config Panel ──╮ -->
+    <section class="bp-config-panel">
+      <div class="bp-panel-head">
+        <span class="bp-panel-title">基础配置</span>
+        <button class="bp-btn-primary" @click="saveConfig" :disabled="saving">
+          <span>{{ saving ? '保存中...' : '保存配置' }}</span>
+          <span class="bp-btn-arrow">▸</span>
+        </button>
+      </div>
+
+      <div class="bp-form">
+        <div class="bp-field">
+          <label class="bp-label">
+            <span class="bp-label-k">01</span>
+            <span class="bp-label-v">Client ID · ID</span>
+          </label>
+          <div class="bp-input-wrap">
+            <input v-model="config.clientId" type="text" placeholder="钉钉应用的 Client ID" class="bp-input" />
+          </div>
+        </div>
+
+        <div class="bp-field">
+          <label class="bp-label">
+            <span class="bp-label-k">02</span>
+            <span class="bp-label-v">Client Secret · SECRET</span>
+          </label>
+          <div class="bp-input-wrap">
+            <input v-model="config.clientSecret" type="password" placeholder="钉钉应用的 Client Secret" class="bp-input" />
+          </div>
+        </div>
+
+        <div class="bp-field">
+          <label class="bp-label">
+            <span class="bp-label-k">03</span>
+            <span class="bp-label-v">默认智能体 · AGENT</span>
+          </label>
+          <el-select v-model="config.defaultAgentId" placeholder="选择默认智能体" style="width: 100%" class="bp-select">
+            <el-option v-for="agent in agents" :key="agent.id" :label="agent.name" :value="agent.id" />
+          </el-select>
+        </div>
+
+        <div class="bp-field">
+          <label class="bp-label">
+            <span class="bp-label-k">04</span>
+            <span class="bp-label-v">启用状态 · ENABLED</span>
+          </label>
+          <div class="bp-switch-wrap">
+            <el-switch v-model="config.enabled" />
+            <span class="bp-switch-label">{{ config.enabled ? '已启用' : '已禁用' }}</span>
+          </div>
+        </div>
+
+        <div class="bp-test-row">
+          <button class="bp-btn" @click="testConnection" :disabled="testing">
+            {{ testing ? '测试中...' : '测试连接' }}
+          </button>
+          <span v-if="testResult" :class="['bp-test-result', testResult.success ? 'success' : 'error']">
+            {{ testResult.success ? '✓' : '✗' }} {{ testResult.message }}
+          </span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ╭── Agent Mapping Panel ──╮ -->
+    <section class="bp-mapping-panel">
+      <div class="bp-panel-head">
+        <span class="bp-panel-title">智能体映射</span>
+        <button class="bp-btn-primary" @click="showAddMappingDialog">
+          <span>添加映射</span>
+          <span class="bp-btn-arrow">▸</span>
+        </button>
+      </div>
+
+      <p class="bp-mapping-desc">为不同的钉钉会话/群聊配置专属智能体，未配置的会话将使用默认智能体</p>
+
+      <div v-if="mappings.length > 0" class="bp-mapping-list">
+        <div v-for="mapping in mappings" :key="mapping.conversationId" class="bp-mapping-item">
+          <span class="bp-card-tick-tl"></span>
+          <span class="bp-card-tick-tr"></span>
+          <span class="bp-card-tick-bl"></span>
+          <span class="bp-card-tick-br"></span>
+
+          <div class="bp-mapping-info">
+            <div class="bp-mapping-row">
+              <span class="bp-mapping-k">会话ID</span>
+              <span class="bp-mapping-v">{{ mapping.conversationId }}</span>
+            </div>
+            <div class="bp-mapping-row">
+              <span class="bp-mapping-k">智能体</span>
+              <span class="bp-mapping-v">{{ mapping.agentName }}</span>
+            </div>
+          </div>
+          <button class="bp-btn-danger" @click="deleteMapping(mapping.conversationId)">删除</button>
+        </div>
+      </div>
+      <div v-else class="bp-empty">
+        <span class="bp-empty-code">[ NO_MAPPING_FOUND ]</span>
+        <span>暂无智能体映射</span>
+      </div>
+    </section>
+
+    <!-- ╭── Guide Panel ──╮ -->
+    <section class="bp-guide-panel">
+      <div class="bp-panel-head">
+        <span class="bp-panel-title">使用说明</span>
+      </div>
+
+      <div class="bp-guide-steps">
+        <div class="bp-guide-step">
+          <span class="bp-step-num">01</span>
+          <div class="bp-step-content">
             <h5>创建钉钉机器人应用</h5>
             <p>在钉钉开放平台创建企业内部机器人应用，获取 Client ID 和 Client Secret</p>
           </div>
         </div>
-
-        <div class="guide-step">
-          <div class="step-number">2</div>
-          <div class="step-content">
+        <div class="bp-guide-step">
+          <span class="bp-step-num">02</span>
+          <div class="bp-step-content">
             <h5>配置回调地址</h5>
-            <p>在钉钉应用管理中设置回调地址：<code>/api/dingtalk/webhook</code></p>
+            <p>在钉钉应用管理中设置回调地址：<code class="bp-code">/api/dingtalk/webhook</code></p>
           </div>
         </div>
-
-        <div class="guide-step">
-          <div class="step-number">3</div>
-          <div class="step-content">
+        <div class="bp-guide-step">
+          <span class="bp-step-num">03</span>
+          <div class="bp-step-content">
             <h5>填写配置信息</h5>
             <p>将 Client ID 和 Client Secret 填入上方配置表单，选择默认智能体</p>
           </div>
         </div>
-
-        <div class="guide-step">
-          <div class="step-number">4</div>
-          <div class="step-content">
+        <div class="bp-guide-step">
+          <span class="bp-step-num">04</span>
+          <div class="bp-step-content">
             <h5>开始对话</h5>
-            <p>用户在钉钉群中 @机器人 发送消息：<code>@智能助手 你的问题</code></p>
+            <p>用户在钉钉群中 @机器人 发送消息：<code class="bp-code">@智能助手 你的问题</code></p>
           </div>
         </div>
       </div>
-    </div>
+    </section>
 
-    <!-- 添加映射对话框 -->
-    <el-dialog
-      v-model="addMappingDialogVisible"
-      title="添加智能体映射"
-      width="500px"
-    >
-      <el-form :model="newMapping" label-position="top">
-        <el-form-item label="会话ID" required>
-          <el-input
-            v-model="newMapping.conversationId"
-            placeholder="钉钉会话ID (如: conversation_xxx)"
-          />
-          <div class="form-hint">
-            在钉钉群中 @机器人 发送消息后，系统会自动获取会话ID
+    <!-- ╭── Add Mapping Dialog ──╮ -->
+    <el-dialog v-model="addMappingDialogVisible" width="520px" class="bp-dialog">
+      <template #header>
+        <div class="bp-dialog-head">
+          <span class="bp-dialog-k">CREATE</span>
+          <span class="bp-dialog-v">添加智能体映射</span>
+        </div>
+      </template>
+
+      <div class="bp-form">
+        <div class="bp-field">
+          <label class="bp-label">
+            <span class="bp-label-k">01</span>
+            <span class="bp-label-v">会话ID · CONVERSATION</span>
+          </label>
+          <div class="bp-input-wrap">
+            <input v-model="newMapping.conversationId" type="text" placeholder="钉钉会话ID" class="bp-input" />
           </div>
-        </el-form-item>
-        <el-form-item label="智能体" required>
+          <span class="bp-field-hint">在钉钉群中 @机器人 发送消息后，系统会自动获取会话ID</span>
+        </div>
+
+        <div class="bp-field">
+          <label class="bp-label">
+            <span class="bp-label-k">02</span>
+            <span class="bp-label-v">智能体 · AGENT</span>
+          </label>
           <el-select v-model="newMapping.agentId" placeholder="选择智能体" style="width: 100%">
-            <el-option
-              v-for="agent in agents"
-              :key="agent.id"
-              :label="agent.name"
-              :value="agent.id"
-            />
+            <el-option v-for="agent in agents" :key="agent.id" :label="agent.name" :value="agent.id" />
           </el-select>
-        </el-form-item>
-      </el-form>
+        </div>
+      </div>
+
       <template #footer>
-        <el-button @click="addMappingDialogVisible = false">取消</el-button>
-        <el-button type="primary" @click="addMapping" :loading="addingMapping">
-          确定
-        </el-button>
+        <div class="bp-dialog-footer">
+          <button class="bp-btn" @click="addMappingDialogVisible = false">取消</button>
+          <button class="bp-btn-primary" @click="addMapping" :disabled="addingMapping">
+            <span>{{ addingMapping ? '添加中...' : '确定' }}</span>
+            <span class="bp-btn-arrow">▸</span>
+          </button>
+        </div>
       </template>
     </el-dialog>
   </div>
@@ -267,10 +306,7 @@ const testResult = ref(null)
 const mappings = ref([])
 const addMappingDialogVisible = ref(false)
 const addingMapping = ref(false)
-const newMapping = ref({
-  conversationId: '',
-  agentId: '',
-})
+const newMapping = ref({ conversationId: '', agentId: '' })
 
 const currentAgentName = computed(() => {
   if (!config.value.defaultAgentId || agents.value.length === 0) return ''
@@ -291,7 +327,7 @@ const loadConfig = async () => {
       config.value.enabled = res.data.enabled || false
     }
   } catch (err) {
-    ElMessage.error('加载配置失败，请刷新页面重试')
+    ElMessage.error('加载配置失败')
   } finally {
     loading.value = false
   }
@@ -326,7 +362,6 @@ const saveConfig = async () => {
     ElMessage.warning('请填写 Client ID 和 Client Secret')
     return
   }
-
   saving.value = true
   try {
     await axios.put('/api/dingtalk/config', config.value)
@@ -343,12 +378,10 @@ const testConnection = async () => {
     ElMessage.warning('请先填写配置信息')
     return
   }
-
   if (config.value.clientSecret === '********') {
-    ElMessage.warning('Client Secret 显示为遮蔽值，请重新输入真实值后测试')
+    ElMessage.warning('请重新输入真实 Client Secret')
     return
   }
-
   testing.value = true
   testResult.value = null
   try {
@@ -376,10 +409,7 @@ const loadAgentMappings = async () => {
 }
 
 const showAddMappingDialog = () => {
-  newMapping.value = {
-    conversationId: '',
-    agentId: '',
-  }
+  newMapping.value = { conversationId: '', agentId: '' }
   addMappingDialogVisible.value = true
 }
 
@@ -388,7 +418,6 @@ const addMapping = async () => {
     ElMessage.warning('请填写会话ID和选择智能体')
     return
   }
-
   addingMapping.value = true
   try {
     const res = await axios.post('/api/dingtalk/agent-mappings', newMapping.value)
@@ -408,7 +437,7 @@ const deleteMapping = async (conversationId) => {
     mappings.value = mappings.value.filter(m => m.conversationId !== conversationId)
     ElMessage.success('映射删除成功')
   } catch (err) {
-    ElMessage.error('删除映射失败: ' + (err.response?.data?.error || err.message))
+    ElMessage.error('删除映射失败')
   }
 }
 
@@ -418,307 +447,341 @@ onMounted(async () => {
 </script>
 
 <style scoped>
-.dingtalk-page {
+.bp-dingtalk {
   width: 100%;
+  animation: bp-fade 0.4s ease-out;
 }
 
-.page-header {
-  margin-bottom: 28px;
-  padding-bottom: 16px;
-  border-bottom: var(--border-weak-line);
-}
+/* page-head base inherited from global blueprint.css */
 
-.page-header h3 {
-  font-size: 20px;
-  font-weight: 700;
-  color: var(--text-primary);
-  margin-bottom: 4px;
-}
-.page-header h3::before {
-  content: '// ';
-  font-family: var(--font-mono);
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--accent);
-  vertical-align: middle;
-  margin-right: 2px;
-  opacity: 0.7;
-}
-.page-header p { font-size: 13px; color: var(--text-muted); }
-
-/* 状态区域 */
-.status-section {
+/* ╭── Panels ──╮ */
+.bp-status-panel, .bp-config-panel, .bp-mapping-panel, .bp-guide-panel {
   padding: 24px;
+  background: rgba(14, 29, 49, 0.6);
+  border: 1px solid rgba(92, 228, 255, 0.2);
   margin-bottom: 20px;
 }
 
-.section-header {
+.bp-panel-head {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 20px;
+  padding-bottom: 12px;
+  border-bottom: 1px dashed rgba(92, 228, 255, 0.15);
 }
 
-.section-header h4 {
-  font-family: var(--font-mono);
-  font-size: 11px;
+.bp-panel-title {
+  font-family: var(--bp-fnt-mono);
+  font-size: 12px;
+  color: var(--bp-blueprint);
   font-weight: 700;
-  color: var(--text-secondary);
   letter-spacing: 0.1em;
-  text-transform: uppercase;
 }
-.section-header h4::before { content: '── '; color: var(--accent); opacity: 0.5; }
 
-.status-grid {
+/* ╭── Status Grid ──╮ */
+.bp-status-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  grid-template-columns: repeat(3, 1fr);
   gap: 16px;
 }
 
-.status-card {
-  display: flex;
-  gap: 16px;
-  padding: 20px;
-  position: relative;
-  overflow: hidden;
-  background: linear-gradient(150deg, rgba(13,148,136,0.05) 0%, var(--bg-hover) 50%);
-  border: var(--border-medium-line);
-  border-radius: var(--radius-md);
-  transition: all 0.25s ease;
-  box-shadow: 0 4px 16px rgba(13,148,136,0.08), var(--shadow-sm);
-}
-
-.status-card::before {
-  content: '';
-  position: absolute; top: 0; left: 0; right: 0;
-  height: 3px;
-  background: var(--accent-gradient);
-}
-
-.status-card:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 12px 32px rgba(13,148,136,0.14), var(--shadow-md);
-}
-
-.status-info {
-  flex: 1;
-}
-
-.status-info h5 {
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--text-primary);
-  margin-bottom: 8px;
-}
-
-.status-badge {
-  display: inline-block;
-  padding: 4px 12px;
-  border-radius: var(--radius-sm);
-  font-size: 13px;
-  font-weight: 500;
-}
-
-.status-badge.connected {
-  background: var(--tag-green-bg);
-  color: var(--tag-green-text);
-}
-
-.status-badge.disconnected {
-  background: var(--tag-red-bg);
-  color: var(--tag-red-text);
-}
-
-.status-badge.unknown {
-  background: var(--bg-hover);
-  color: var(--text-muted);
-}
-
-.message-stats {
-  display: flex;
-  gap: 12px;
-}
-
-.stat-item {
-  font-size: 13px;
-  color: var(--text-secondary);
-}
-
-.agent-name {
-  font-size: 13px;
-  color: var(--text-secondary);
-}
-
-/* 配置区域 */
-.config-section {
-  padding: 24px;
-  margin-bottom: 20px;
-}
-
-.config-form {
-  max-width: 800px;
-}
-
-.test-section {
-  display: flex;
-  gap: 12px;
-  align-items: center;
-  padding-top: 20px;
-  border-top: var(--border-weak-line);
-}
-
-.test-result {
-  font-size: 14px;
-}
-
-.test-result.success {
-  color: var(--success);
-}
-
-.test-result.error {
-  color: var(--danger);
-}
-
-/* 智能体映射区域 */
-.mapping-section {
-  padding: 24px;
-  margin-bottom: 20px;
-}
-
-.mapping-description {
-  font-size: 14px;
-  color: var(--text-secondary);
-  margin-bottom: 20px;
-  padding: 12px 16px;
-  background: var(--bg-hover);
-  border-radius: var(--radius-lg);
-  border-left: 3px solid var(--accent);
-}
-
-.mapping-list {
+.bp-stat-box {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 8px;
+  padding: 16px 20px;
+  background: rgba(92, 228, 255, 0.05);
+  border: 1px solid rgba(92, 228, 255, 0.1);
 }
 
-.mapping-item {
+.bp-stat-k {
+  font-family: var(--bp-fnt-mono);
+  font-size: 11px;
+  color: var(--bp-chalk-dim);
+  letter-spacing: 0.1em;
+}
+
+.bp-stat-v {
+  font-family: var(--bp-fnt-mono);
+  font-size: 14px;
+  color: var(--bp-chalk);
+}
+
+.bp-stat-v.connected { color: var(--bp-green-check); }
+.bp-stat-v.disconnected { color: var(--bp-red-stamp); }
+.bp-stat-v.unknown { color: var(--bp-chalk-dim); }
+
+/* ╭── Form ──╮ */
+.bp-form {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 16px;
-  background: var(--bg-hover);
-  border-radius: var(--radius-md);
-  border: var(--border-medium-line);
+  flex-direction: column;
+  gap: 18px;
+}
+
+.bp-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.bp-label {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.bp-label-k {
+  font-family: var(--bp-fnt-mono);
+  font-size: 10px;
+  color: var(--bp-amber);
+  letter-spacing: 0.1em;
+}
+
+.bp-label-v {
+  font-family: var(--bp-fnt-mono);
+  font-size: 12px;
+  color: var(--bp-chalk);
+  letter-spacing: 0.06em;
+}
+
+.bp-input-wrap {
+  padding: 8px 4px;
+  border: 1px solid rgba(92, 228, 255, 0.15);
+  background: rgba(92, 228, 255, 0.05);
   transition: all 0.2s ease;
 }
 
-.mapping-item:hover {
-  border-color: var(--accent);
+.bp-input-wrap:focus-within {
+  border-color: var(--bp-blueprint);
+  background: rgba(92, 228, 255, 0.08);
+  box-shadow: 0 0 12px rgba(92, 228, 255, 0.2);
 }
 
-.mapping-info {
-  flex: 1;
+.bp-input {
+  width: 100%;
+  background: transparent;
+  border: none;
+  outline: none;
+  font-family: var(--bp-fnt-mono);
+  font-size: 13px;
+  color: var(--bp-chalk);
+}
+
+.bp-input::placeholder {
+  color: var(--bp-chalk-dim);
+  opacity: 0.5;
+}
+
+.bp-switch-wrap {
   display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.mapping-id,
-.mapping-agent {
-  display: flex;
-  gap: 8px;
-  font-size: 14px;
-}
-
-.mapping-id .label,
-.mapping-agent .label {
-  color: var(--text-muted);
-  min-width: 60px;
-}
-
-.mapping-id .value,
-.mapping-agent .value {
-  color: var(--text-primary);
-  font-family: monospace;
-}
-
-.empty-mapping {
-  display: flex;
-  flex-direction: column;
   align-items: center;
-  justify-content: center;
-  padding: 48px 24px;
-  color: var(--text-muted);
+  gap: 12px;
 }
 
-.empty-icon {
-  font-size: 48px;
+.bp-switch-label {
+  font-family: var(--bp-fnt-mono);
+  font-size: 12px;
+  color: var(--bp-chalk-dim);
+}
+
+.bp-field-hint {
+  font-family: var(--bp-fnt-mono);
+  font-size: 11px;
+  color: var(--bp-chalk-dim);
+  opacity: 0.6;
+}
+
+.bp-test-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding-top: 16px;
+  border-top: 1px dashed rgba(92, 228, 255, 0.15);
+}
+
+.bp-test-result {
+  font-family: var(--bp-fnt-mono);
+  font-size: 13px;
+}
+
+.bp-test-result.success { color: var(--bp-green-check); }
+.bp-test-result.error { color: var(--bp-red-stamp); }
+
+/* ╭── Mapping ──╮ */
+.bp-mapping-desc {
+  font-family: 'Hanken Grotesk', 'PingFang SC', sans-serif;
+  font-size: 13px;
+  color: var(--bp-chalk-dim);
+  padding: 12px 16px;
+  background: rgba(92, 228, 255, 0.05);
+  border-left: 3px solid var(--bp-blueprint);
   margin-bottom: 16px;
 }
 
-.empty-mapping p {
-  font-size: 14px;
+.bp-mapping-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
 
-.form-hint {
-  font-size: 12px;
-  color: var(--text-muted);
-  margin-top: 4px;
+.bp-mapping-item {
+  position: relative;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  background: rgba(92, 228, 255, 0.05);
+  border: 1px solid rgba(92, 228, 255, 0.15);
 }
 
-/* 使用说明区域 */
-.guide-section {
-  padding: 24px;
+.bp-card-tick-tl, .bp-card-tick-tr, .bp-card-tick-bl, .bp-card-tick-br {
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  border: 1px solid rgba(92, 228, 255, 0.3);
 }
 
-.guide-content {
+.bp-card-tick-tl { top: -1px; left: -1px; border-right: none; border-bottom: none; }
+.bp-card-tick-tr { top: -1px; right: -1px; border-left: none; border-bottom: none; }
+.bp-card-tick-bl { bottom: -1px; left: -1px; border-right: none; border-top: none; }
+.bp-card-tick-br { bottom: -1px; right: -1px; border-left: none; border-top: none; }
+
+.bp-mapping-info {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.bp-mapping-row {
+  display: flex;
+  gap: 8px;
+}
+
+.bp-mapping-k {
+  font-family: var(--bp-fnt-mono);
+  font-size: 11px;
+  color: var(--bp-chalk-dim);
+  min-width: 60px;
+}
+
+.bp-mapping-v {
+  font-family: var(--bp-fnt-mono);
+  font-size: 13px;
+  color: var(--bp-chalk);
+}
+
+.bp-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 40px;
+  color: var(--bp-chalk-dim);
+}
+
+.bp-empty-code {
+  font-family: var(--bp-fnt-mono);
+  font-size: 11px;
+  color: var(--bp-blueprint);
+  letter-spacing: 0.14em;
+  opacity: 0.6;
+}
+
+/* ╭── Guide ──╮ */
+.bp-guide-steps {
   display: flex;
   flex-direction: column;
   gap: 16px;
 }
 
-.guide-step {
+.bp-guide-step {
   display: flex;
   gap: 16px;
   padding: 16px;
-  background: var(--bg-hover);
-  border-radius: var(--radius-md);
-  border: var(--border-medium-line);
+  background: rgba(92, 228, 255, 0.05);
+  border: 1px solid rgba(92, 228, 255, 0.1);
 }
 
-.step-number {
+.bp-step-num {
   width: 36px;
   height: 36px;
-  background: var(--accent);
-  border-radius: var(--radius-sm);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: white;
-  font-weight: 600;
-  font-size: 16px;
+  display: grid;
+  place-items: center;
+  background: var(--bp-blueprint);
+  color: var(--bp-ink);
+  font-family: var(--bp-fnt-mono);
+  font-size: 12px;
+  font-weight: 700;
   flex-shrink: 0;
 }
 
-.step-content h5 {
-  font-size: 16px;
-  font-weight: 600;
-  color: var(--text-primary);
+.bp-step-content h5 {
+  font-family: var(--bp-fnt-mono);
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--bp-chalk);
   margin-bottom: 6px;
 }
 
-.step-content p {
-  font-size: 14px;
-  color: var(--text-secondary);
+.bp-step-content p {
+  font-family: 'Hanken Grotesk', 'PingFang SC', sans-serif;
+  font-size: 13px;
+  color: var(--bp-chalk-dim);
   line-height: 1.6;
 }
 
-.step-content code {
+.bp-code {
   padding: 2px 6px;
-  background: var(--tag-blue-bg);
-  border-radius: var(--radius-sm);
-  font-family: var(--font-mono);
+  background: rgba(92, 228, 255, 0.1);
+  border: 1px solid rgba(92, 228, 255, 0.2);
+  font-family: var(--bp-fnt-mono);
+  font-size: 12px;
+  color: var(--bp-blueprint);
+}
+
+/* ╭── Dialog ──╮ */
+.bp-dialog-head {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  padding-bottom: 12px;
+  border-bottom: 1px dashed rgba(92, 228, 255, 0.2);
+}
+
+.bp-dialog-k {
+  font-family: var(--bp-fnt-mono);
+  font-size: 10px;
+  color: var(--bp-chalk-dim);
+  letter-spacing: 0.2em;
+}
+
+.bp-dialog-v {
+  font-family: var(--bp-fnt-mono);
   font-size: 13px;
-  color: var(--tag-blue-text);
+  color: var(--bp-blueprint);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+
+.bp-dialog-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding-top: 16px;
+  border-top: 1px dashed rgba(92, 228, 255, 0.2);
+}
+
+.bp-btn-arrow {
+  margin-left: 4px;
+  opacity: 0.7;
+}
+
+/* ╭── Animations ──╮ */
+@keyframes bp-fade { from { opacity: 0; } to { opacity: 1; } }
+
+/* ╭── Responsive ──╮ */
+@media (max-width: 768px) {
+  .bp-status-grid { grid-template-columns: 1fr; }
 }
 </style>

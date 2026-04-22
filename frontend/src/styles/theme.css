@@ -66,7 +66,7 @@
 
   /* Solid card style (replaces glass) */
   --card-bg: #ffffff;
-  --card-border: 1px solid rgba(13, 17, 23, 0.10);
+  --card-border: 1px solid rgba(13, 148, 136, 0.25);
 
   /* Radius - slightly sharper */
   --radius-sm: 4px;
@@ -185,8 +185,8 @@
   --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.5);
   --shadow-glow: 0 0 20px var(--accent-glow);
 
-  --card-bg: #161b22;
-  --card-border: 1px solid rgba(230, 237, 243, 0.08);
+  --card-bg: rgba(14, 29, 49, 0.7);
+  --card-border: 1px solid rgba(92, 228, 255, 0.25);
 
   --tag-green-bg: rgba(6, 78, 59, 0.6);
   --tag-green-text: #6ee7b7;
@@ -265,8 +265,7 @@ body {
 .card {
   background: var(--card-bg);
   border: var(--card-border);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-sm), inset 0 1px 0 rgba(255,255,255,0.04);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(92, 228, 255, 0.08);
   transition: all 0.25s ease;
   position: relative;
   overflow: hidden;
@@ -279,19 +278,26 @@ body {
   left: 0;
   right: 0;
   height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.08), transparent);
+  background: linear-gradient(90deg, transparent, rgba(92, 228, 255, 0.3), transparent);
+}
+
+.card::after {
+  content: '';
+  position: absolute;
+  inset: 4px;
+  border: 1px solid rgba(92, 228, 255, 0.06);
+  pointer-events: none;
 }
 
 .card:hover {
-  box-shadow: var(--shadow-md), 0 0 20px var(--accent-glow);
-  transform: translateY(-2px);
+  box-shadow: 0 0 24px rgba(92, 228, 255, 0.25), 0 8px 32px rgba(0, 0, 0, 0.5);
+  border-color: var(--accent);
 }
 
 .card--panel {
   background: var(--card-bg);
   border: var(--card-border);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-sm);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
 }
 
 /* Nav group label - Terminal style */

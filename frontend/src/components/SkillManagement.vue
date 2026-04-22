@@ -1,53 +1,90 @@
 <template>
-  <div class="skill-page">
-    <div class="page-header">
-      <div>
-        <h3>技能配置</h3>
-        <p>配置大数据运维技能和 MCP 工具</p>
-      </div>
-      <div class="header-acts">
-        <div class="mode-toggle">
-          <button :class="{ active: view === 'skills' }" @click="view = 'skills'">
-            <svg class="mode-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
-              <polyline points="2 17 12 22 22 17"></polyline>
-              <polyline points="2 12 12 17 22 12"></polyline>
-            </svg>
-            Skills
+  <div class="bp-skills">
+    <!-- ╭── Page Header · LoginPage title block ──╮ -->
+    <header class="bp-page-head">
+      <aside class="bp-margin-ruler">
+        <span class="bp-margin-tick" v-for="n in ['01','02','03','04','05']" :key="n">
+          <em>{{ n }}</em><i></i>
+        </span>
+      </aside>
+
+      <div class="bp-page-head-body">
+        <div class="bp-title-block">
+          <span class="bp-eyebrow">
+            <i class="bp-eyebrow-bar"></i>
+            <span>FIG.02 — CAPABILITY CATALOG</span>
+          </span>
+
+          <h1 class="bp-display-title">
+            <span class="bp-t-main">技能</span>
+            <span class="bp-t-accent">SKILLS</span>
+            <span class="bp-t-mute">/ MCP TOOLS</span>
+          </h1>
+
+          <div class="bp-dim">
+            <span class="bp-dim-arrow">◂</span>
+            <span class="bp-dim-line"></span>
+            <span class="bp-dim-num">{{ String(skills.length).padStart(3, '0') }}</span>
+            <span class="bp-dim-line"></span>
+            <span class="bp-dim-arrow">▸</span>
+          </div>
+
+          <p class="bp-sub">配置大数据运维技能与 MCP 工具 — 从本地目录导入、同步、热装载。每一项技能都可以绑定到任意智能体。</p>
+
+          <div class="bp-callouts">
+            <span class="bp-callout"><em>A</em><span>SKILL LIBRARY</span></span>
+            <span class="bp-callout is-amber"><em>B</em><span>MCP REGISTRY</span></span>
+            <span class="bp-callout is-green"><em>C</em><span>HOT RELOAD</span></span>
+          </div>
+        </div>
+
+        <!-- View switch + actions -->
+        <div class="bp-head-toolbar">
+          <div class="bp-view-toggle">
+            <button :class="['bp-view-btn', { active: view === 'skills' }]" @click="view = 'skills'">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
+                <polyline points="2 17 12 22 22 17"></polyline>
+                <polyline points="2 12 12 17 22 12"></polyline>
+              </svg>
+              <span>SKILLS</span>
+            </button>
+            <button :class="['bp-view-btn', { active: view === 'mcp' }]" @click="view = 'mcp'">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
+                <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+              </svg>
+              <span>MCP</span>
+            </button>
+            <span class="bp-view-rail" :style="{ transform: `translateX(${view === 'skills' ? 0 : 100}%)` }"></span>
+          </div>
+
+          <button v-if="view === 'skills'" class="bp-exec is-ghost" @click="showImportDialog = true">
+            <span class="bp-exec-label">导入</span>
+            <span class="bp-exec-arrows"><span>▸</span><span>▸</span><span>▸</span></span>
           </button>
-          <button :class="{ active: view === 'mcp' }" @click="view = 'mcp'">
-            <svg class="mode-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
-              <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
-            </svg>
-            MCP
+          <button v-if="view === 'skills'" class="bp-exec is-ghost" @click="sync" :disabled="syncing">
+            <span class="bp-exec-label">{{ syncing ? '同步中…' : '同步' }}</span>
+            <span class="bp-exec-arrows" v-if="!syncing"><span>▸</span><span>▸</span><span>▸</span></span>
+          </button>
+          <button v-else class="bp-exec" @click="addMCP">
+            <span class="bp-exec-label">添加 MCP</span>
+            <span class="bp-exec-arrows"><span>▸</span><span>▸</span><span>▸</span></span>
           </button>
         </div>
-        <el-button v-if="view === 'skills'" @click="showImportDialog = true">
-          <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-            <polyline points="17 8 12 3 7 8"></polyline>
-            <line x1="12" y1="3" x2="12" y2="15"></line>
-          </svg>
-          导入
-        </el-button>
-        <el-button v-if="view === 'skills'" @click="sync" :loading="syncing">
-          <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <polyline points="23 4 23 10 17 10"></polyline>
-            <polyline points="1 20 1 14 7 14"></polyline>
-            <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l5.64 5.36A9 9 0 0 0 20.49 15"></path>
-          </svg>
-          同步
-        </el-button>
-        <el-button v-else type="primary" @click="addMCP">
-          <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <line x1="12" y1="5" x2="12" y2="19"></line>
-            <line x1="5" y1="12" x2="19" y2="12"></line>
-          </svg>
-          添加 MCP
-        </el-button>
+
+        <!-- Revision stamp -->
+        <div class="bp-stamp">
+          <div class="bp-stamp-inner is-amber">
+            <span class="bp-stamp-check">✓</span>
+            <div class="bp-stamp-text">
+              <strong>SYNCED</strong>
+              <small>SKILL-OPS · REV.03</small>
+            </div>
+          </div>
+        </div>
       </div>
-    </div>
+    </header>
 
     <!-- Skills 目录信息 -->
     <div v-if="view === 'skills'" class="dirs-info">
@@ -246,6 +283,7 @@
 import { ref, onMounted, computed } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import axios from 'axios'
+import { STORAGE_KEYS } from '../utils/constants'
 
 const props = defineProps({ mode: String })
 const view = ref('skills')
@@ -283,7 +321,7 @@ const uploadFile = ref(null)
 
 const mcpIcons = ['⚡', '🐘', '🔧', '📊', '🔥', '💾', '📡', '🌐', '💻', '☁️']
 
-// MCP 工具列表（从 localStorage 加载）
+// MCP 工具列表
 const mcpTools = ref([])
 
 const getIcon = t => ({
@@ -327,8 +365,7 @@ const sync = async () => {
     loadDirs()
   } catch (e) {
     ElMessage.error('同步失败: ' + (e.response?.data?.error || e.message))
-  }
-  finally {
+  } finally {
     syncing.value = false
   }
 }
@@ -352,22 +389,20 @@ const saveSkill = async () => {
       saving.value = false
       return
     }
-
     await axios.put(`/api/skills/${curSkill.value.id}`, { config })
     ElMessage.success('保存成功')
     skillDialog.value = false
     load()
   } catch (e) {
     ElMessage.error('保存失败')
-  }
-  finally {
+  } finally {
     saving.value = false
   }
 }
 
 // 加载 MCP 工具配置
 const loadMCP = () => {
-  const saved = localStorage.getItem('mcp-tools')
+  const saved = localStorage.getItem(STORAGE_KEYS.MCP_TOOLS)
   if (saved) {
     try {
       mcpTools.value = JSON.parse(saved)
@@ -418,7 +453,7 @@ const getDefaultMCP = () => [
 
 // 保存 MCP 工具到 localStorage
 const saveMCPToStorage = () => {
-  localStorage.setItem('mcp-tools', JSON.stringify(mcpTools.value))
+  localStorage.setItem(STORAGE_KEYS.MCP_TOOLS, JSON.stringify(mcpTools.value))
 }
 
 // 添加 MCP
@@ -451,7 +486,6 @@ const saveMCP = async () => {
     ElMessage.warning('请填写 ID 和名称')
     return
   }
-
   savingMCP.value = true
   try {
     if (isEditMCP.value) {
@@ -460,7 +494,6 @@ const saveMCP = async () => {
         mcpTools.value[index] = { ...mcpForm.value }
       }
     } else {
-      // 检查是否已存在
       if (mcpTools.value.some(t => t.id === mcpForm.value.id)) {
         ElMessage.warning('该 MCP ID 已存在')
         savingMCP.value = false
@@ -468,7 +501,6 @@ const saveMCP = async () => {
       }
       mcpTools.value.push({ ...mcpForm.value })
     }
-
     saveMCPToStorage()
     ElMessage.success('保存成功')
     mcpDialog.value = false
@@ -486,7 +518,6 @@ const testMCP = async (t) => {
       t.connected = true
       ElMessage.success(`${t.name} 连接成功`)
     } else {
-      // 模拟测试
       await new Promise(r => setTimeout(r, 800))
       t.connected = true
       ElMessage.success(`${t.name} 配置有效`)
@@ -495,8 +526,7 @@ const testMCP = async (t) => {
   } catch (e) {
     t.connected = false
     ElMessage.error(`连接失败: ${e.message}`)
-  }
-  finally {
+  } finally {
     t.testing = false
   }
 }
@@ -524,17 +554,12 @@ const doImport = async () => {
   importing.value = true
   try {
     if (importMode.value === 'url') {
-      // URL 导入
       if (!importUrl.value) {
         ElMessage.warning('请输入 URL 地址')
         importing.value = false
         return
       }
-
-      const res = await axios.post('/api/skills/import', {
-        url: importUrl.value
-      })
-
+      const res = await axios.post('/api/skills/import', { url: importUrl.value })
       ElMessage.success(`导入成功: ${res.data.name || res.data.id}`)
       showImportDialog.value = false
       importUrl.value = ''
@@ -542,20 +567,16 @@ const doImport = async () => {
       load()
       loadDirs()
     } else {
-      // 文件导入
       if (!uploadFile.value) {
         ElMessage.warning('请选择要导入的文件')
         importing.value = false
         return
       }
-
       const formData = new FormData()
       formData.append('file', uploadFile.value)
-
       const res = await axios.post('/api/skills/import/file', formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       })
-
       ElMessage.success(`导入成功: ${res.data.name || res.data.id}`)
       showImportDialog.value = false
       uploadFile.value = null
@@ -580,212 +601,246 @@ onMounted(async () => {
 </script>
 
 <style scoped>
-.skill-page { width: 100%; }
-.page-header {
-  display: flex; justify-content: space-between; align-items: flex-start;
-  margin-bottom: 28px; padding-bottom: 16px; border-bottom: var(--border-weak-line);
-}
-.page-header h3 { font-size: 20px; font-weight: 700; color: var(--text-primary); margin-bottom: 4px; }
-.page-header h3::before { content: '// '; font-family: var(--font-mono); font-size: 12px; font-weight: 600; color: var(--accent); vertical-align: middle; margin-right: 2px; opacity: 0.7; }
-.page-header p { font-size: 13px; color: var(--text-muted); }
-.header-acts { display: flex; gap: 12px; align-items: center; }
-.mode-toggle { display: flex; background: var(--bg-hover); border-radius: var(--radius-sm); padding: 4px; }
-.mode-toggle button { padding: 8px 16px; border: none; background: none; color: var(--text-muted); cursor: pointer; border-radius: 8px; font-size: 13px; font-weight: 600; }
-.mode-toggle button.active { background: var(--accent); color: white; }
+.bp-skills { width: 100%; animation: bp-fade 0.4s ease-out; }
 
-/* Skills 目录信息 */
+/* Toolbar row below title block */
+.bp-head-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 22px;
+  flex-wrap: wrap;
+}
+
+.bp-view-toggle {
+  position: relative;
+  display: inline-flex;
+  border: 1px solid var(--bp-border);
+  background: rgba(14, 29, 49, 0.4);
+  overflow: hidden;
+}
+
+.bp-view-btn {
+  position: relative;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 18px;
+  border: none;
+  background: transparent;
+  color: var(--bp-chalk-dim);
+  font-family: var(--bp-fnt-mono);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  cursor: pointer;
+  transition: color 0.25s;
+}
+
+.bp-view-btn svg { width: 14px; height: 14px; }
+
+.bp-view-btn.active { color: var(--bp-ink); }
+
+.bp-view-rail {
+  position: absolute;
+  top: 0; bottom: 0; left: 0;
+  width: 50%;
+  background: var(--bp-blueprint);
+  box-shadow: 0 0 20px rgba(92, 228, 255, 0.45);
+  transition: transform 0.35s cubic-bezier(.2,.8,.2,1);
+  z-index: 1;
+}
+
+.btn-icon { width: 14px; height: 14px; margin-right: 4px; }
+
 .dirs-info { display: flex; gap: 12px; margin-bottom: 16px; flex-wrap: wrap; }
 .dir-card {
-  display: flex; align-items: center; gap: 12px; padding: 12px 16px;
-  position: relative; overflow: hidden;
-  background: linear-gradient(90deg, rgba(13,148,136,0.06) 0%, var(--bg-primary) 60%);
-  border: var(--border-medium-line);
-  border-radius: var(--radius-sm);
-  transition: all 0.2s ease;
-  box-shadow: 0 2px 8px rgba(13,148,136,0.06);
+  display: flex; align-items: center; gap: 14px;
+  padding: 14px 18px;
+  background: rgba(14, 29, 49, 0.6);
+  border: 1px solid rgba(92, 228, 255, 0.2);
+  border-left: 3px solid #5ce4ff;
 }
-.dir-card::before {
-  content: '';
-  position: absolute; top: 0; left: 0; right: 0;
-  height: 2px;
-  background: var(--accent-gradient);
+.dir-status {
+  display: flex; align-items: center; gap: 8px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px; color: #aba088;
 }
-.dir-card:hover { box-shadow: 0 6px 18px rgba(13,148,136,0.12); transform: translateY(-1px); }
-.dir-status { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--text-muted); font-family: var(--font-mono); }
-.dir-path { font-family: var(--font-mono); font-size: 12px; color: var(--text-secondary); font-weight: 500; letter-spacing: 0.02em; }
-.dir-count { font-size: 12px; background: var(--tag-blue-bg); padding: 4px 8px; border-radius: var(--radius-sm); color: var(--tag-blue-text); }
+.dir-path {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px; color: #f0e6d2;
+}
+.dir-count {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px; padding: 3px 10px;
+  background: rgba(92, 228, 255, 0.1);
+  color: #5ce4ff;
+}
 
-.skill-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 16px; }
+.skill-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 16px; }
 .skill-card {
-  display: flex; gap: 16px; padding: 20px;
-  position: relative; overflow: hidden;
-  background: linear-gradient(150deg, rgba(13,148,136,0.05) 0%, var(--bg-primary) 45%);
-  border: var(--border-medium-line);
-  border-radius: var(--radius-md);
-  cursor: pointer; transition: all 0.25s ease;
-  box-shadow: 0 4px 16px rgba(13,148,136,0.08), var(--shadow-sm);
+  display: flex; gap: 16px; padding: 20px 24px;
+  background: linear-gradient(180deg, rgba(14, 29, 49, 0.8) 0%, rgba(10, 23, 38, 0.9) 100%);
+  border: 1px solid rgba(92, 228, 255, 0.25);
+  cursor: pointer;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.4);
+  position: relative;
 }
 .skill-card::before {
   content: '';
-  position: absolute; top: 0; left: 0; right: 0;
-  height: 3px;
-  background: var(--accent-gradient);
+  position: absolute; top: 0; left: 0; right: 0; height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(92, 228, 255, 0.4), transparent);
 }
 .skill-card:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 12px 32px rgba(13,148,136,0.15), var(--shadow-md);
-  border-color: rgba(13,148,136,0.3);
+  border-color: #5ce4ff;
+  box-shadow: 0 0 28px rgba(92, 228, 255, 0.25), 0 8px 40px rgba(0, 0, 0, 0.5);
 }
-.skill-icon { width: 48px; height: 48px; background: var(--bg-hover); border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0; }
-.skill-info { flex: 1; }
-.skill-info h4 { font-size: 15px; font-weight: 600; color: var(--text-primary); margin-bottom: 4px; }
-.skill-info p { font-size: 13px; color: var(--text-muted); margin-bottom: 8px; line-height: 1.4; }
+.skill-icon {
+  width: 48px; height: 48px;
+  display: grid; place-items: center;
+  border: 1px solid rgba(92, 228, 255, 0.2);
+  background: rgba(92, 228, 255, 0.06);
+  font-size: 18px;
+}
+.skill-info h4 {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 14px; color: #f0e6d2;
+  margin-bottom: 6px;
+}
+.skill-info p {
+  font-size: 13px; color: #aba088;
+  margin-bottom: 10px;
+}
 .skill-meta { display: flex; gap: 8px; align-items: center; }
-.skill-id { font-family: var(--font-mono); font-size: 10px; color: var(--text-muted); background: var(--bg-hover); padding: 2px 6px; border-radius: 2px; letter-spacing: 0.04em; }
+.skill-id {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px; color: #aba088;
+  background: rgba(92, 228, 255, 0.06);
+  padding: 2px 8px;
+}
 
-.empty { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 60px; background: var(--bg-primary); border: var(--border-medium-line); border-radius: var(--radius-md); color: var(--text-muted); }
-.empty span { font-size: 40px; margin-bottom: 12px; opacity: .5; }
+.empty {
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 12px; padding: 60px 40px;
+  background: rgba(14, 29, 49, 0.5);
+  border: 1px dashed rgba(92, 228, 255, 0.2);
+}
+.empty span { font-size: 32px; opacity: 0.4; }
+.empty p {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px; color: #aba088;
+}
 
-.mcp-box { background: var(--bg-primary); border: var(--border-medium-line); border-radius: var(--radius-md); padding: 24px; transition: all 0.3s ease; }
-.mcp-intro { margin-bottom: 20px; }
-.mcp-intro h4 { font-size: 18px; font-weight: 600; color: var(--text-primary); margin-bottom: 4px; }
-.mcp-intro p { font-size: 14px; color: var(--text-muted); }
-.mcp-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px; }
+.mcp-box {
+  background: rgba(14, 29, 49, 0.6);
+  border: 1px solid rgba(92, 228, 255, 0.2);
+  padding: 24px;
+}
+.mcp-intro {
+  margin-bottom: 20px;
+  border-bottom: 1px dashed rgba(92, 228, 255, 0.15);
+  padding-bottom: 16px;
+}
+.mcp-intro h4 {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px; color: #5ce4ff;
+}
+.mcp-intro p { font-size: 13px; color: #aba088; }
+.mcp-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
 .mcp-card {
   padding: 20px; text-align: center;
-  position: relative; overflow: hidden;
-  background: var(--bg-hover);
-  border: var(--border-medium-line); border-radius: var(--radius-md);
-  transition: all 0.25s ease;
+  background: rgba(14, 29, 49, 0.7);
+  border: 1px solid rgba(92, 228, 255, 0.15);
+  position: relative;
 }
 .mcp-card::before {
   content: '';
-  position: absolute; top: 0; left: 0; right: 0;
-  height: 3px;
-  background: linear-gradient(90deg, var(--border-medium), var(--border-medium));
-  transition: background 0.25s ease;
+  position: absolute; top: 0; left: 0; right: 0; height: 1px;
+  background: rgba(92, 228, 255, 0.2);
 }
 .mcp-card.connected {
-  background: linear-gradient(150deg, rgba(13,148,136,0.07) 0%, var(--bg-hover) 50%);
-  border-color: rgba(13,148,136,0.25);
-  box-shadow: 0 4px 16px rgba(13,148,136,0.1);
+  background: rgba(14, 29, 49, 0.85);
+  border-color: rgba(143, 212, 165, 0.3);
 }
-.mcp-card.connected::before { background: var(--accent-gradient); }
-.mcp-status { display: flex; align-items: center; justify-content: center; gap: 6px; font-size: 12px; color: var(--text-muted); margin-bottom: 12px; }
-.mcp-icon { font-size: 16px; margin-bottom: 8px; }
-.mcp-card h4 { font-size: 15px; font-weight: 600; color: var(--text-primary); margin-bottom: 4px; }
-.mcp-card p { font-size: 13px; color: var(--text-muted); margin-bottom: 12px; }
+.mcp-card.connected::before {
+  background: linear-gradient(90deg, transparent, #8fd4a5, transparent);
+}
+.mcp-status {
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px; color: #aba088;
+}
+.mcp-icon { font-size: 24px; margin-bottom: 10px; }
+.mcp-card h4 {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 14px; color: #f0e6d2;
+}
+.mcp-card p { font-size: 13px; color: #aba088; margin-bottom: 14px; }
 .mcp-acts { display: flex; gap: 8px; justify-content: center; }
 
-/* 图标选择器 */
-.icon-selector { display: flex; gap: 8px; flex-wrap: wrap; }
-.icon-option { width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; background: var(--bg-hover); border: var(--border-medium-line); border-radius: var(--radius-lg); font-size: 18px; cursor: pointer; transition: all 0.2s ease; }
-.icon-option:hover { border-color: var(--accent); }
-.icon-option.active { background: var(--tag-blue-bg); border-color: var(--accent); }
-
-/* 按钮图标 */
-.btn-icon { width: 14px; height: 14px; margin-right: 4px; }
-.mode-icon { width: 14px; height: 14px; margin-right: 6px; }
-.mode-toggle button { display: flex; align-items: center; }
-
-/* 导入对话框 */
-.import-section { }
-.import-tabs { display: flex; gap: 8px; margin-bottom: 20px; }
+.import-section { padding: 0; }
+.import-tabs {
+  display: flex;
+  border: 1px solid rgba(92, 228, 255, 0.15);
+  margin-bottom: 20px;
+}
 .import-tab {
   flex: 1;
-  padding: 12px 16px;
-  border: var(--border-medium-line);
-  background: transparent;
-  border-radius: var(--radius-sm);
-  cursor: pointer;
-  font-size: 14px;
-  font-weight: 500;
-  color: var(--text-muted);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  transition: all 0.2s ease;
-}
-.import-tab svg { width: 16px; height: 16px; }
-.import-tab:hover { border-color: var(--accent); color: var(--text-secondary); }
-.import-tab.active {
-  background: var(--tag-blue-bg);
-  border-color: var(--accent);
-  color: var(--accent);
-}
-
-.import-content { }
-.import-hint {
-  font-size: 13px;
-  color: var(--text-muted);
-  margin-bottom: 12px;
-}
-
-.import-preview {
-  margin-top: 16px;
-  padding: 16px;
-  background: var(--bg-hover);
-  border-radius: var(--radius-sm);
-}
-.import-preview h5 {
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--text-muted);
-  margin-bottom: 12px;
-}
-.preview-card {
-  display: flex;
-  gap: 12px;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
   padding: 12px;
-  background: var(--bg-primary);
-  border-radius: var(--radius-lg);
-  border: var(--border-weak-line);
-}
-.preview-icon {
-  width: 40px;
-  height: 40px;
-  background: var(--bg-hover);
-  border-radius: var(--radius-sm);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 16px;
-  flex-shrink: 0;
-}
-.preview-info strong {
-  display: block;
-  font-size: 14px;
-  color: var(--text-primary);
-  margin-bottom: 4px;
-}
-.preview-info p {
+  border: none; background: transparent;
+  color: #aba088; cursor: pointer;
+  font-family: 'JetBrains Mono', monospace;
   font-size: 12px;
-  color: var(--text-muted);
-  margin: 0;
 }
+.import-tab.active {
+  background: rgba(92, 228, 255, 0.1);
+  color: #5ce4ff;
+}
+.import-content { padding: 10px 0; }
+.import-hint { font-size: 13px; color: #aba088; margin-bottom: 12px; }
+.import-preview { margin-top: 16px; border-top: 1px dashed rgba(92, 228, 255, 0.15); padding-top: 16px; }
+.preview-card {
+  display: flex; align-items: center; gap: 14px; padding: 14px;
+  background: rgba(92, 228, 255, 0.06);
+  border: 1px solid rgba(92, 228, 255, 0.15);
+}
+.preview-icon { font-size: 24px; }
+.preview-info strong { font-size: 14px; color: #f0e6d2; }
+.preview-info p { font-size: 12px; color: #aba088; }
 
 .upload-area {
-  padding: 40px 20px;
-  text-align: center;
+  display: flex; flex-direction: column;
+  align-items: center; gap: 10px; padding: 40px;
+  background: rgba(92, 228, 255, 0.03);
+  border: 1px dashed rgba(92, 228, 255, 0.2);
 }
-.upload-area svg {
-  width: 48px;
-  height: 48px;
-  color: var(--accent);
-  margin-bottom: 12px;
-}
-.upload-area p {
-  font-size: 14px;
-  color: var(--text-secondary);
-  margin-bottom: 4px;
-}
-.upload-area em {
-  color: var(--accent);
-  font-style: normal;
-}
+.upload-area svg { width: 32px; height: 32px; color: #5ce4ff; opacity: 0.6; }
+.upload-area p { font-size: 14px; color: #aba088; }
+.upload-area em { color: #5ce4ff; font-style: normal; }
 .upload-area span {
-  font-size: 12px;
-  color: var(--text-muted);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px; color: #aba088; opacity: 0.5;
+}
+
+.icon-selector { display: flex; gap: 8px; flex-wrap: wrap; }
+.icon-option {
+  width: 36px; height: 36px;
+  display: grid; place-items: center;
+  border: 1px solid rgba(92, 228, 255, 0.2);
+  background: rgba(92, 228, 255, 0.05);
+  cursor: pointer; font-size: 18px;
+}
+.icon-option.active {
+  background: rgba(92, 228, 255, 0.15);
+  border-color: #5ce4ff;
+}
+
+@media (max-width: 768px) {
+  .skill-grid, .mcp-grid { grid-template-columns: 1fr; }
+  .skill-card, .mcp-card { padding: 16px; }
+  .bp-head-toolbar { flex-wrap: wrap; }
 }
 </style>
