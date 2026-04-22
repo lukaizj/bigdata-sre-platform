@@ -2,6 +2,21 @@
 
 大数据智能运维平台 - 基于 AI 的智能运维助手
 
+## 平台预览
+
+<table>
+  <tr>
+    <td align="center"><b>登录页</b></td>
+    <td align="center"><b>智能对话</b></td>
+    <td align="center"><b>智能体管理</b></td>
+  </tr>
+  <tr>
+    <td><img src="docs/screenshot-login.png" alt="登录页" width="420"/></td>
+    <td><img src="docs/screenshot-main.png" alt="智能对话" width="420"/></td>
+    <td><img src="docs/screenshot-agents.png" alt="智能体管理" width="420"/></td>
+  </tr>
+</table>
+
 ## 功能特性
 
 ### 核心功能
