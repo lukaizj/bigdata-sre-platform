@@ -28,6 +28,7 @@
 - **多集群管理**: 支持配置多套 Hadoop/Spark/YARN 集群，一键测试连通性并切换
 - **钉钉集成**: 钉钉机器人接入、会话托管、智能体与群聊的映射管理
 - **用户权限管理**: 支持管理员和普通用户角色，可配置模块访问权限，支持个人资料与密码修改
+- **LDAP 统一认证**: 管理员可在用户管理页配置 OpenLDAP / Active Directory，支持本地账号与 LDAP 账号共存登录、目录连通性测试与首次登录自动建档
 - **登录安全**: SVG 图形验证码、JWT 会话、注册/登录双重验证
 
 ### UI 特性
@@ -154,6 +155,8 @@ npm run build
 - 管理员: `admin@bigdata.local` / `admin123`
 - 登录/注册需填写 SVG 图形验证码（首次进入页面自动加载，点击图片可刷新）
 - 可在用户管理页面创建其他用户，或进入个人中心修改资料与密码
+- 管理员可在用户管理页面直接配置 LDAP 接入参数（启用状态、方言、Bind DN、Search Base、Filter、属性映射、TLS）
+- 登录页复用同一个入口，本地账号与 LDAP 账号可共存；LDAP 用户首次认证成功后会自动创建平台账号
 
 ## API 接口
 
@@ -169,6 +172,9 @@ PUT    /api/auth/password      # 修改密码
 GET    /api/auth/users         # 用户列表（管理员）
 PUT    /api/auth/users/:id     # 更新用户（管理员）
 DELETE /api/auth/users/:id     # 删除用户（管理员）
+GET    /api/auth/ldap/config   # 获取 LDAP 配置（管理员）
+PUT    /api/auth/ldap/config   # 保存 LDAP 配置（管理员）
+POST   /api/auth/ldap/test-connection # 测试 LDAP 连通性（管理员）
 ```
 
 ### 智能体

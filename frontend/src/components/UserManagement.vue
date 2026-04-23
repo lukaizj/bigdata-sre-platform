@@ -144,6 +144,153 @@
         </div>
       </div>
 
+      <div class="bp-list-panel bp-ldap-panel">
+        <div class="bp-list-head">
+          <div>
+            <span class="bp-list-title">LDAP 配置</span>
+            <p class="bp-ldap-sub">统一认证接入配置 — 管理员可测试目录连通性并保存登录参数。</p>
+          </div>
+          <div class="bp-ldap-actions bp-ldap-actions-head">
+            <button class="bp-btn" @click="testLdapConnection" :disabled="ldapTesting || ldapLoading">
+              <span>{{ ldapTesting ? '测试中...' : '测试连接' }}</span>
+            </button>
+            <button class="bp-btn-primary" @click="saveLdapConfig" :disabled="ldapSaving || ldapLoading">
+              <span>{{ ldapSaving ? '保存中...' : '保存配置' }}</span>
+              <span class="bp-btn-arrow">▸</span>
+            </button>
+          </div>
+        </div>
+
+        <div v-if="ldapLoading" class="bp-loading bp-ldap-loading">
+          <span class="bp-spinner"></span>
+          <span>加载 LDAP 配置中...</span>
+        </div>
+
+        <el-form v-else :model="ldapForm" label-position="top" class="bp-form">
+          <div class="bp-ldap-grid bp-ldap-grid-top">
+            <div class="bp-field">
+              <label class="bp-label">
+                <span class="bp-label-k">01</span>
+                <span class="bp-label-v">启用 · ENABLE</span>
+              </label>
+              <div class="bp-ldap-switch-row">
+                <el-switch v-model="ldapForm.enabled" />
+                <span class="bp-ldap-switch-label">{{ ldapForm.enabled ? '已启用 LDAP 登录' : '未启用 LDAP 登录' }}</span>
+              </div>
+            </div>
+
+            <div class="bp-field">
+              <label class="bp-label">
+                <span class="bp-label-k">02</span>
+                <span class="bp-label-v">方言 · DIALECT</span>
+              </label>
+              <el-select v-model="ldapForm.dialect" style="width: 100%" class="bp-select">
+                <el-option v-for="dialect in ldapDialects" :key="dialect" :label="dialect.toUpperCase()" :value="dialect" />
+              </el-select>
+            </div>
+          </div>
+
+          <div class="bp-ldap-grid">
+            <div class="bp-field">
+              <label class="bp-label">
+                <span class="bp-label-k">03</span>
+                <span class="bp-label-v">服务地址 · URL</span>
+              </label>
+              <div class="bp-input-wrap">
+                <input v-model="ldapForm.url" type="text" placeholder="ldap://host:389 或 ldaps://host:636" class="bp-input" />
+              </div>
+            </div>
+
+            <div class="bp-field">
+              <label class="bp-label">
+                <span class="bp-label-k">04</span>
+                <span class="bp-label-v">绑定账号 · BIND DN</span>
+              </label>
+              <div class="bp-input-wrap">
+                <input v-model="ldapForm.bindDN" type="text" placeholder="cn=admin,dc=example,dc=com" class="bp-input" />
+              </div>
+            </div>
+          </div>
+
+          <div class="bp-ldap-grid">
+            <div class="bp-field">
+              <label class="bp-label">
+                <span class="bp-label-k">05</span>
+                <span class="bp-label-v">绑定密码 · PASSWORD</span>
+              </label>
+              <div class="bp-input-wrap">
+                <input v-model="ldapForm.bindPassword" type="password" placeholder="留空或保持脱敏值表示不修改" class="bp-input" />
+              </div>
+            </div>
+
+            <div class="bp-field">
+              <label class="bp-label">
+                <span class="bp-label-k">06</span>
+                <span class="bp-label-v">搜索基准 · BASE DN</span>
+              </label>
+              <div class="bp-input-wrap">
+                <input v-model="ldapForm.searchBase" type="text" placeholder="ou=people,dc=example,dc=com" class="bp-input" />
+              </div>
+            </div>
+          </div>
+
+          <div class="bp-ldap-grid">
+            <div class="bp-field">
+              <label class="bp-label">
+                <span class="bp-label-k">07</span>
+                <span class="bp-label-v">搜索过滤器 · FILTER</span>
+              </label>
+              <div class="bp-input-wrap">
+                <input v-model="ldapForm.searchFilter" type="text" placeholder="(uid={{username}})" class="bp-input" />
+              </div>
+            </div>
+
+            <div class="bp-field">
+              <label class="bp-label">
+                <span class="bp-label-k">08</span>
+                <span class="bp-label-v">TLS 校验 · TLS</span>
+              </label>
+              <div class="bp-ldap-switch-row">
+                <el-switch v-model="ldapForm.tlsEnabled" />
+                <span class="bp-ldap-switch-label">{{ ldapForm.tlsEnabled ? '启用 TLS 连接' : '普通 LDAP 连接' }}</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="bp-ldap-grid">
+            <div class="bp-field">
+              <label class="bp-label">
+                <span class="bp-label-k">09</span>
+                <span class="bp-label-v">邮箱属性 · EMAIL</span>
+              </label>
+              <div class="bp-input-wrap">
+                <input v-model="ldapForm.emailAttribute" type="text" placeholder="mail" class="bp-input" />
+              </div>
+            </div>
+
+            <div class="bp-field">
+              <label class="bp-label">
+                <span class="bp-label-k">10</span>
+                <span class="bp-label-v">姓名属性 · NAME</span>
+              </label>
+              <div class="bp-input-wrap">
+                <input v-model="ldapForm.nameAttribute" type="text" placeholder="cn 或 displayName" class="bp-input" />
+              </div>
+            </div>
+          </div>
+
+          <div class="bp-ldap-actions">
+            <button class="bp-btn" @click.prevent="testLdapConnection" :disabled="ldapTesting">
+              <span>{{ ldapTesting ? '测试中...' : '测试连接' }}</span>
+            </button>
+            <button class="bp-btn-primary" @click.prevent="saveLdapConfig" :disabled="ldapSaving">
+              <span>{{ ldapSaving ? '保存中...' : '保存配置' }}</span>
+              <span class="bp-btn-arrow">▸</span>
+            </button>
+          </div>
+        </el-form>
+      </div>
+
       <!-- User List -->
       <div class="bp-list-panel">
         <div class="bp-list-head">
@@ -424,7 +571,68 @@ const availableModules = [
   { key: 'config', label: '集群配置' },
 ]
 
-const editDialogVisible = ref(false)
+const ldapLoading = ref(false)
+const ldapSaving = ref(false)
+const ldapTesting = ref(false)
+const ldapDialects = ref([])
+const ldapForm = ref({
+  enabled: false,
+  dialect: 'openldap',
+  url: '',
+  bindDN: '',
+  bindPassword: '',
+  searchBase: '',
+  searchFilter: '(uid={{username}})',
+  emailAttribute: 'mail',
+  nameAttribute: 'cn',
+  tlsEnabled: false
+})
+
+const loadLdapConfig = async () => {
+  if (!isAdmin.value) return
+  ldapLoading.value = true
+  try {
+    const res = await axios.get('/api/auth/ldap/config')
+    ldapForm.value = {
+      ...ldapForm.value,
+      ...(res.data.config || {})
+    }
+    ldapDialects.value = res.data.dialects || []
+  } catch (err) {
+    ElMessage.error(err.response?.data?.error || '加载 LDAP 配置失败')
+  } finally {
+    ldapLoading.value = false
+  }
+}
+
+const saveLdapConfig = async () => {
+  ldapSaving.value = true
+  try {
+    const res = await axios.put('/api/auth/ldap/config', ldapForm.value)
+    ldapForm.value = {
+      ...ldapForm.value,
+      ...(res.data.config || {})
+    }
+    ElMessage.success('LDAP 配置已保存')
+  } catch (err) {
+    ElMessage.error(err.response?.data?.error || '保存 LDAP 配置失败')
+  } finally {
+    ldapSaving.value = false
+  }
+}
+
+const testLdapConnection = async () => {
+  ldapTesting.value = true
+  try {
+    const res = await axios.post('/api/auth/ldap/test-connection', ldapForm.value)
+    ElMessage.success(`连接成功 · base=${res.data.baseDN} · entries=${res.data.entries}`)
+  } catch (err) {
+    ElMessage.error(err.response?.data?.error || 'LDAP 连接失败')
+  } finally {
+    ldapTesting.value = false
+  }
+}
+
 const deleteDialogVisible = ref(false)
 const editForm = ref({
   id: '',
@@ -597,6 +805,7 @@ const savePassword = async () => {
 onMounted(() => {
   loadCurrentUser()
   loadUsers()
+  loadLdapConfig()
 })
 </script>
 
@@ -1146,9 +1355,72 @@ onMounted(() => {
   .bp-perms-grid { grid-template-columns: repeat(2, 1fr); }
 }
 
+
+.bp-ldap-panel {
+  margin-bottom: 20px;
+}
+
+.bp-ldap-sub {
+  margin-top: 8px;
+  font-family: var(--bp-fnt-mono);
+  font-size: 11px;
+  color: var(--bp-chalk-dim);
+  letter-spacing: 0.04em;
+}
+
+.bp-ldap-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.bp-ldap-grid-top {
+  align-items: end;
+}
+
+.bp-ldap-switch-row {
+  min-height: 46px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 4px;
+  border-bottom: 1px solid rgba(92, 228, 255, 0.15);
+}
+
+.bp-ldap-switch-label {
+  font-family: var(--bp-fnt-mono);
+  font-size: 12px;
+  color: var(--bp-chalk-dim);
+}
+
+.bp-ldap-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+.bp-ldap-actions-head {
+  align-items: center;
+}
+
+.bp-ldap-loading {
+  padding: 32px;
+}
+
+@media (max-width: 1024px) {
+  .bp-ldap-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 @media (max-width: 768px) {
   .bp-profile-acts { flex-direction: column; }
   .bp-search-box input { width: 100%; }
   .bp-list-panel { padding: 16px; }
+  .bp-ldap-actions,
+  .bp-ldap-actions-head {
+    flex-direction: column;
+    align-items: stretch;
+  }
 }
 </style>
