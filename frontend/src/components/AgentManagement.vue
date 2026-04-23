@@ -13,7 +13,7 @@
         <div class="bp-title-block">
           <span class="bp-eyebrow">
             <i class="bp-eyebrow-bar"></i>
-            <span>FIG.01 — AGENT REGISTRY</span>
+            <span>AGENT REGISTRY</span>
           </span>
 
           <h1 class="bp-display-title">
@@ -132,7 +132,7 @@
       <template #header>
         <div class="bp-dialog-head">
           <span class="bp-dialog-k">{{ isEdit ? 'EDIT' : 'CREATE' }}</span>
-          <span class="bp-dialog-v">{{ isEdit ? '02 — 编辑智能体' : '01 — 创建智能体' }}</span>
+          <span class="bp-dialog-v">{{ isEdit ? '编辑智能体' : '创建智能体' }}</span>
         </div>
       </template>
 

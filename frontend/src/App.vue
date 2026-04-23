@@ -52,7 +52,7 @@
           <!-- Navigation -->
           <nav class="bp-nav">
             <div class="bp-nav-group">
-              <span class="bp-nav-label">01 — 工作区</span>
+              <span class="bp-nav-label">工作区</span>
               <div
                 v-for="item in workspaceItems"
                 :key="item.key"
@@ -67,7 +67,7 @@
 
             <template v-if="user?.role === ROLE.ADMIN || (normalizedPermissions && normalizedPermissions.includes('dashboard'))">
               <div class="bp-nav-group">
-                <span class="bp-nav-label">02 — 监控</span>
+                <span class="bp-nav-label">监控</span>
                 <div
                   v-for="item in monitorItems"
                   :key="item.key"
@@ -83,7 +83,7 @@
 
             <template v-if="user?.role === ROLE.ADMIN">
               <div class="bp-nav-group">
-                <span class="bp-nav-label">03 — 管理</span>
+                <span class="bp-nav-label">管理</span>
                 <div
                   v-for="item in adminItems"
                   :key="item.key"
@@ -98,7 +98,7 @@
             </template>
 
             <div class="bp-nav-group">
-              <span class="bp-nav-label">04 — 帮助</span>
+              <span class="bp-nav-label">帮助</span>
               <div
                 :class="['bp-nav-item', { active: activeMenu === 'guide' }]"
                 @click="activeMenu = 'guide'"
@@ -129,9 +129,7 @@
 
           <!-- Panel header -->
           <header class="bp-detail-head">
-            <span class="bp-detail-k">VIEW</span>
             <span class="bp-detail-v">{{ currentPageCode }}</span>
-            <span class="bp-detail-scale">SCALE 1:1</span>
 
             <!-- User menu -->
             <div class="bp-user-menu" @click="showUserMenu = !showUserMenu">
@@ -218,13 +216,13 @@ function tickClock() {
 }
 
 const menuItems = [
-  { key: 'chat', label: '智能对话', num: '01', icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>' },
-  { key: 'dashboard', label: '集群仪表板', num: '05', icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"></rect><path d="M3 9h18M9 21V9"></path></svg>' },
-  { key: 'agents', label: '智能体管理', num: '02', icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle></svg>' },
-  { key: 'skills', label: '技能配置', num: '03', icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline></svg>' },
-  { key: 'dingtalk', label: '钉钉配置', num: '06', icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg>' },
-  { key: 'config', label: '集群配置', num: '07', icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"></path></svg>' },
-  { key: 'users', label: '用户管理', num: '08', icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>' },
+  { key: 'chat', label: '智能对话', icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>' },
+  { key: 'dashboard', label: '集群仪表板', icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"></rect><path d="M3 9h18M9 21V9"></path></svg>' },
+  { key: 'agents', label: '智能体管理', icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle></svg>' },
+  { key: 'skills', label: '技能配置', icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline></svg>' },
+  { key: 'dingtalk', label: '钉钉配置', icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg>' },
+  { key: 'config', label: '集群配置', icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"></path></svg>' },
+  { key: 'users', label: '用户管理', icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>' },
 ]
 
 const menuMap = Object.fromEntries(menuItems.map(item => [item.key, item]))
@@ -269,8 +267,8 @@ const currentPageTitle = computed(() => {
 })
 
 const currentPageCode = computed(() => {
-  if (activeMenu.value === 'guide') return '99 — USER_GUIDE'
-  return activeItem.value ? `${activeItem.value.num} — ${activeItem.value.label.toUpperCase().replace(/\s+/g, '_')}` : 'VIEW'
+  if (activeMenu.value === 'guide') return '使用说明'
+  return activeItem.value ? activeItem.value.label : ''
 })
 
 const currentComponent = computed(() => componentMap[activeMenu.value])
@@ -550,24 +548,11 @@ onBeforeUnmount(() => {
   animation: bp-fade 0.5s ease-out 0.4s backwards;
 }
 
-.bp-detail-k {
-  font-size: 10px;
-  color: var(--bp-chalk-dim);
-  letter-spacing: 0.2em;
-}
-
 .bp-detail-v {
   font-size: 13px;
   color: var(--bp-blueprint);
   font-weight: 700;
   letter-spacing: 0.08em;
-}
-
-.bp-detail-scale {
-  font-size: 9px;
-  color: var(--bp-chalk-dim);
-  letter-spacing: 0.2em;
-  margin-right: auto;
 }
 
 /* ╭── User Menu ──╮ */
@@ -580,6 +565,7 @@ onBeforeUnmount(() => {
   border: 1px solid transparent;
   transition: all 0.2s;
   position: relative;
+  margin-left: auto;
 }
 
 .bp-user-menu:hover {

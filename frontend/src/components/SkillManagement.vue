@@ -12,7 +12,7 @@
         <div class="bp-title-block">
           <span class="bp-eyebrow">
             <i class="bp-eyebrow-bar"></i>
-            <span>FIG.02 — CAPABILITY CATALOG</span>
+            <span>CAPABILITY CATALOG</span>
           </span>
 
           <h1 class="bp-display-title">

@@ -54,7 +54,7 @@
         <div class="bp-title-block">
           <span class="bp-eyebrow">
             <i class="bp-eyebrow-bar"></i>
-            <span>FIG.01 — PROJECT IDENTITY</span>
+            <span>PROJECT IDENTITY</span>
           </span>
 
           <h1 class="bp-title">

@@ -12,7 +12,7 @@
         <div class="bp-title-block">
           <span class="bp-eyebrow">
             <i class="bp-eyebrow-bar"></i>
-            <span>FIG.05 — SYSTEM WIRING</span>
+            <span>SYSTEM WIRING</span>
           </span>
 
           <h1 class="bp-display-title">

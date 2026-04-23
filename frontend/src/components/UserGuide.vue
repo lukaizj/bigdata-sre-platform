@@ -12,7 +12,7 @@
         <div class="bp-title-block">
           <span class="bp-eyebrow">
             <i class="bp-eyebrow-bar"></i>
-            <span>FIG.00 — OPERATOR MANUAL</span>
+            <span>OPERATOR MANUAL</span>
           </span>
 
           <h1 class="bp-display-title">
@@ -103,10 +103,7 @@
           <span class="bp-step-num">03</span>
           <h4 class="bp-step-title">开始对话</h4>
           <p class="bp-step-desc">选择智能体，通过自然语言查询集群状态</p>
-          <button class="bp-btn-primary" @click="$emit('navigate', 'chat')">
-            <span>开始对话</span>
-            <span class="bp-btn-arrow">▸</span>
-          </button>
+          <button class="bp-btn" @click="$emit('navigate', 'chat')">开始对话</button>
         </div>
       </div>
     </section>
@@ -720,12 +717,6 @@ const expandedFaq = ref(0)
   font-family: 'Hanken Grotesk', 'PingFang SC', sans-serif;
   font-size: 13px;
   color: var(--bp-chalk-dim);
-}
-
-/* ╭── Button Arrow ──╮ */
-.bp-btn-arrow {
-  margin-left: 4px;
-  opacity: 0.7;
 }
 
 /* ╭── Animations ──╮ */

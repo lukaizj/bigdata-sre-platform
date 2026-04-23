@@ -249,6 +249,8 @@
 }
 
 .bp-btn-primary {
+  position: relative;
+  overflow: hidden;
   background: var(--bp-chalk);
   border-color: var(--bp-chalk);
   color: var(--bp-ink);

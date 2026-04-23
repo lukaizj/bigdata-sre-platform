@@ -12,7 +12,7 @@
         <div class="bp-title-block">
           <span class="bp-eyebrow">
             <i class="bp-eyebrow-bar"></i>
-            <span>FIG.04 — CLUSTER TELEMETRY</span>
+            <span>CLUSTER TELEMETRY</span>
           </span>
 
           <h1 class="bp-display-title">
